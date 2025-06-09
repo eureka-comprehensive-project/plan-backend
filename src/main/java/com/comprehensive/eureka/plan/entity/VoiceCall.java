@@ -18,6 +18,7 @@ import java.util.List;
 public class VoiceCall {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "voice_call_id")
     private Integer voiceCallId;
 

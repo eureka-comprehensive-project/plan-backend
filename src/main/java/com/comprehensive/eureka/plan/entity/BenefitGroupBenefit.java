@@ -15,6 +15,7 @@ import lombok.Setter;
 public class BenefitGroupBenefit {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long benefitGroupBenefitId;
 
     @ManyToOne(fetch = FetchType.LAZY)

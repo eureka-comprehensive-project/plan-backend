@@ -18,6 +18,7 @@ import java.util.List;
 public class PlanCategory {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "category_id")
     private Long categoryId;
 
