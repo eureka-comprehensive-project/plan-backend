@@ -18,10 +18,9 @@ import java.util.List;
 public class BenefitGroup {
 
     @Id
-    @Column(name = "혜택모음ID")
+    @Column(name = "benefit_group_id")
     private Long benefitGroupId;
 
-    @Column(name = "설명")
     private String description;
 
     @OneToMany(mappedBy = "benefitGroup")

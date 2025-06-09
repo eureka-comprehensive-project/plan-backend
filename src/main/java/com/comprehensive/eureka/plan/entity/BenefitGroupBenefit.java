@@ -15,15 +15,14 @@ import lombok.Setter;
 public class BenefitGroupBenefit {
 
     @Id
-    @Column(name = "혜택모음혜택ID")
     private Long benefitGroupBenefitId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "혜택모음ID")
+    @JoinColumn(name = "benefit_group_id")
     private BenefitGroup benefitGroup;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "혜택ID")
+    @JoinColumn(name = "benefit_id")
     private Benefit benefit;
 
 }

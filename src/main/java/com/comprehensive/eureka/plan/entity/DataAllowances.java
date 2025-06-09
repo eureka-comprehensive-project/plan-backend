@@ -1,5 +1,6 @@
 package com.comprehensive.eureka.plan.entity;
 
+import com.comprehensive.eureka.plan.enums.DataPeriod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,17 +19,14 @@ import java.util.List;
 public class DataAllowances {
 
     @Id
-    @Column(name = "데이터제공량ID")
+    @Column(name = "data_allowance_id")
     private Integer dataAllowanceId;
 
-    @Column(name = "데이터 수치")
     private Integer dataAmount;
 
-    @Column(name = "데이터 단위", length = 2)
     private String dataUnit;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "일/월")
     private DataPeriod dataPeriod;
 
     @OneToMany(mappedBy = "dataAllowances")

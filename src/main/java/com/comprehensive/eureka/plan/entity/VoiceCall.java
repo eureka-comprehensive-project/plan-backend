@@ -18,13 +18,11 @@ import java.util.List;
 public class VoiceCall {
 
     @Id
-    @Column(name = "음성통화 ID")
+    @Column(name = "voice_call_id")
     private Integer voiceCallId;
 
-    @Column(name = "음성 제공량")
     private Integer voiceAllowance;
 
-    @Column(name = "부가통화 제공량")
     private Integer additionalCallAllowance;
 
     @OneToMany(mappedBy = "voiceCall")

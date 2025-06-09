@@ -18,10 +18,9 @@ import java.util.List;
 public class PlanCategory {
 
     @Id
-    @Column(name = "카테고리 ID")
+    @Column(name = "category_id")
     private Long categoryId;
 
-    @Column(name = "카테고리명")
     private String categoryName;
 
     @OneToMany(mappedBy = "planCategory")

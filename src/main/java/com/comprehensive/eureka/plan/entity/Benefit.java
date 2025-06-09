@@ -1,5 +1,6 @@
 package com.comprehensive.eureka.plan.entity;
 
+import com.comprehensive.eureka.plan.enums.BenefitType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,14 +19,12 @@ import java.util.List;
 public class Benefit {
 
     @Id
-    @Column(name = "혜택ID")
+    @Column(name = "benefit_id")
     private Long benefitId;
 
-    @Column(name = "혜택명", length = 20)
     private String benefitName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "혜택타입")
     private BenefitType benefitType;
 
     @OneToMany(mappedBy = "benefit")

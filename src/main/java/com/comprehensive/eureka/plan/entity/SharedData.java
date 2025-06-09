@@ -18,22 +18,17 @@ import java.util.List;
 public class SharedData {
 
     @Id
-    @Column(name = "테더링 쉐어링 ID")
+    @Column(name = "shared_data_id")
     private Integer sharedDataId;
 
-    @Column(name = "테더링/쉐어링 데이터 수치")
     private Integer tetheringDataAmount;
 
-    @Column(name = "테더링/쉐어링 데이터 단위", length = 2)
     private String tetheringDataUnit;
 
-    @Column(name = "가족데이터 여부")
     private Boolean familyDataAvailable;
 
-    @Column(name = "가족데이터 수치")
     private Integer familyDataAmount;
 
-    @Column(name = "가족데이터 단위", length = 2)
     private String familyDataUnit;
 
     @OneToMany(mappedBy = "sharedData")

@@ -18,15 +18,15 @@ import java.util.List;
 public class PlanBenefitGroup {
 
     @Id
-    @Column(name = "요금제혜택ID")
+    @Column(name = "plan_benefit_id")
     private Long planBenefitId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "요금제ID")
+    @JoinColumn(name = "plan_id")
     private Plan plan;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "혜택모음ID")
+    @JoinColumn(name = "benefit_group_id")
     private BenefitGroup benefitGroup;
 
     @OneToMany(mappedBy = "planBenefitGroup")

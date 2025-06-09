@@ -18,29 +18,27 @@ import java.util.List;
 public class Plan {
 
     @Id
-    @Column(name = "요금제ID")
+    @Column(name = "plan_id")
     private Integer planId;
 
-    @Column(name = "요금제 이름", length = 20)
     private String planName;
 
-    @Column(name = "월정액")
     private Integer monthlyFee;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "데이터 제공량 ID")
+    @JoinColumn(name = "data_allowance_id")
     private DataAllowances dataAllowances;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "음성통화 ID")
+    @JoinColumn(name = "voice_call_id")
     private VoiceCall voiceCall;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "테더링 쉐어링 ID")
+    @JoinColumn(name = "shared_data_id")
     private SharedData sharedData;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "카테고리 ID")
+    @JoinColumn(name = "category_id")
     private PlanCategory planCategory;
 
     @OneToMany(mappedBy = "plan")
