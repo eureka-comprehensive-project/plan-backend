@@ -18,6 +18,7 @@ import java.util.List;
 public class PlanBenefitGroup {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "plan_benefit_id")
     private Long planBenefitId;
 

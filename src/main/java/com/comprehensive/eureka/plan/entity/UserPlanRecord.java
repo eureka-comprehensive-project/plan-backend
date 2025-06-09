@@ -14,6 +14,7 @@ import java.time.LocalDate;
 public class UserPlanRecord {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userPlanRecordId;
 
     private Long userId;
