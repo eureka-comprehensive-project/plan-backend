@@ -26,6 +26,14 @@ public class PlanController {
         return BaseResponseDto.success(plans);
     }
 
+    @PutMapping("/{planId}")
+    public BaseResponseDto<PlanDto> updatePlan(
+            @PathVariable Integer planId,
+            @RequestBody PlanDto planDto) {
+        PlanDto updatedPlan = planService.updatePlan(planId, planDto);
+        return BaseResponseDto.success(updatedPlan);
+    }
+
     @GetMapping("/{planId}")
     public BaseResponseDto<PlanDto> getPlanById(@PathVariable Integer planId) {
         PlanDto plan = planService.getPlanById(planId);
