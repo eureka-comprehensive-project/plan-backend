@@ -1,6 +1,6 @@
 package com.comprehensive.eureka.plan.entity;
 
-import com.comprehensive.eureka.plan.enums.DataPeriod;
+import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

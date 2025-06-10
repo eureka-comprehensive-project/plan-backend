@@ -1,4 +1,4 @@
-package com.comprehensive.eureka.plan.enums;
+package com.comprehensive.eureka.plan.entity.enums;
 
 public enum DataPeriod {
     DAY("일"),
