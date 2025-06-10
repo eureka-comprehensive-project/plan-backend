@@ -8,4 +8,5 @@ public interface PlanService {
 
     PlanDto createPlan(PlanDto planDto);
     List<PlanDto> getAllPlans();
+    PlanDto updatePlan(Integer planId, PlanDto planDto);
 }
