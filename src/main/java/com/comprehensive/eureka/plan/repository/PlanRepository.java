@@ -11,7 +11,6 @@ import java.util.List;
 public interface PlanRepository extends JpaRepository<Plan, Integer> {
     boolean existsByPlanName(String planName);
 
-    // N+1 문제 방지를 위한 fetch join 쿼리 추가
     @Query("SELECT DISTINCT p FROM Plan p " +
             "LEFT JOIN FETCH p.dataAllowances " +
             "LEFT JOIN FETCH p.voiceCall " +

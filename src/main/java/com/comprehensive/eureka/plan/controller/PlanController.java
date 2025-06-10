@@ -25,4 +25,10 @@ public class PlanController {
         List<PlanDto> plans = planService.getAllPlans();
         return BaseResponseDto.success(plans);
     }
+
+    @GetMapping("/{planId}")
+    public BaseResponseDto<PlanDto> getPlanById(@PathVariable Integer planId) {
+        PlanDto plan = planService.getPlanById(planId);
+        return BaseResponseDto.success(plan);
+    }
 }

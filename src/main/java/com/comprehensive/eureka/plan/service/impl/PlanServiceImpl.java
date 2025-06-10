@@ -176,6 +176,30 @@ public class PlanServiceImpl implements PlanService {
         }).collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public PlanDto getPlanById(Integer planId) {
+        Plan plan = planRepository.findById(planId)
+                .orElseThrow( () -> new PlanException(ErrorCode.PLAN_NOT_FOUND));
+
+        Set<Long> benefitIds = new HashSet<>();
+
+        List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findByPlan_PlanId(planId);
+
+        for (PlanBenefitGroup planBenefitGroup : planBenefitGroups) {
+            List<BenefitGroupBenefit> groupBenefits =
+                    benefitGroupBenefitRepository.findByBenefitGroup_BenefitGroupId(
+                            planBenefitGroup.getBenefitGroup().getBenefitGroupId());
+
+            for (BenefitGroupBenefit groupBenefit : groupBenefits) {
+                benefitIds.add(groupBenefit.getBenefit().getBenefitId());
+            }
+        }
+
+        return convertToDto(plan, new ArrayList<>(benefitIds));
+
+    }
+
     private PlanDto convertToDto(Plan plan, List<Long> originalBenefitIds) {
         return PlanDto.builder()
                 .planName(plan.getPlanName())
