@@ -24,10 +24,8 @@ import com.comprehensive.eureka.plan.repository.VoiceCallRepository;
 import com.comprehensive.eureka.plan.service.PlanService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -209,6 +207,48 @@ public class PlanServiceImpl implements PlanService {
             newSharedData.setFamilyDataAvailable(dto.getFamilyDataAmount() != null && dto.getFamilyDataAmount() > 0);
             return sharedDataRepository.save(newSharedData);
         });
+    }
+
+    @Override
+    @Transactional
+    public List<PlanDto> getAllPlans() {
+        // N+1 문제 방지를 위해 fetch join 사용
+        List<Plan> plans = planRepository.findAllWithBasicDetails();
+
+        return plans.stream().map(plan -> {
+            // 중복을 방지하기 위해 Set 사용
+            Set<Integer> benefitIds = new HashSet<>();
+
+            // Plan과 연결된 모든 BenefitGroup 조회
+            List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findByPlan_PlanId(plan.getPlanId());
+
+            for (PlanBenefitGroup planBenefitGroup : planBenefitGroups) {
+                // 각 BenefitGroup에 속한 모든 Benefit 조회
+                List<BenefitGroupBenefit> groupBenefits =
+                        benefitGroupBenefitRepository.findByBenefitGroup_BenefitGroupId(
+                                planBenefitGroup.getBenefitGroup().getBenefitGroupId());
+
+                for (BenefitGroupBenefit groupBenefit : groupBenefits) {
+                    benefitIds.add(groupBenefit.getBenefit().getBenefitId().intValue());
+                }
+            }
+
+            return PlanDto.builder()
+                    .planName(plan.getPlanName())
+                    .planCategory(plan.getPlanCategory() != null ? plan.getPlanCategory().getCategoryName() : null)
+                    .dataAllowance(plan.getDataAllowances() != null ? plan.getDataAllowances().getDataAmount() : null)
+                    .dataAllowanceUnit(plan.getDataAllowances() != null ? plan.getDataAllowances().getDataUnit() : null)
+                    .dataPeriod(plan.getDataAllowances() != null ? plan.getDataAllowances().getDataPeriod() : null)
+                    .tetheringDataAmount(plan.getSharedData() != null ? plan.getSharedData().getTetheringDataAmount() : null)
+                    .tetheringDataUnit(plan.getSharedData() != null ? plan.getSharedData().getTetheringDataUnit() : null)
+                    .familyDataAmount(plan.getSharedData() != null ? plan.getSharedData().getFamilyDataAmount() : null)
+                    .familyDataUnit(plan.getSharedData() != null ? plan.getSharedData().getFamilyDataUnit() : null)
+                    .VoiceAllowance(plan.getVoiceCall() != null ? plan.getVoiceCall().getVoiceAllowance() : null)
+                    .additionalCallAllowance(plan.getVoiceCall() != null ? plan.getVoiceCall().getAdditionalCallAllowance() : null)
+                    .monthlyFee(plan.getMonthlyFee())
+                    .benefitIdList(new ArrayList<>(benefitIds))
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     private PlanDto convertToDto(Plan plan, List<Integer> originalBenefitIds) {
