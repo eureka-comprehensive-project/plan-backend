@@ -25,4 +25,12 @@ public class PlanController {
         List<PlanDto> plans = planService.getAllPlans();
         return BaseResponseDto.success(plans);
     }
+
+    @PutMapping("/{planId}")
+    public BaseResponseDto<PlanDto> updatePlan(
+            @PathVariable Integer planId,
+            @RequestBody PlanDto planDto) {
+        PlanDto updatedPlan = planService.updatePlan(planId, planDto);
+        return BaseResponseDto.success(updatedPlan);
+    }
 }
