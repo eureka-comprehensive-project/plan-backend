@@ -1,5 +1,6 @@
 package com.comprehensive.eureka.plan.dto;
 
+import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ public class PlanDto {
     private String planCategory;
     private Integer dataAllowance;
     private String dataAllowanceUnit;
+    private DataPeriod dataPeriod;
     private Integer tetheringDataAmount;
     private String tetheringDataUnit;
     private Integer familyDataAmount;
