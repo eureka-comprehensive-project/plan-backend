@@ -12,6 +12,8 @@ import com.comprehensive.eureka.plan.entity.SharedData;
 import com.comprehensive.eureka.plan.entity.VoiceCall;
 import com.comprehensive.eureka.plan.entity.enums.BenefitType;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
+import com.comprehensive.eureka.plan.exception.ErrorCode;
+import com.comprehensive.eureka.plan.exception.PlanException;
 import com.comprehensive.eureka.plan.repository.BenefitGroupBenefitRepository;
 import com.comprehensive.eureka.plan.repository.BenefitGroupRepository;
 import com.comprehensive.eureka.plan.repository.BenefitRepository;
@@ -22,95 +24,102 @@ import com.comprehensive.eureka.plan.repository.PlanRepository;
 import com.comprehensive.eureka.plan.repository.SharedDataRepository;
 import com.comprehensive.eureka.plan.repository.VoiceCallRepository;
 import com.comprehensive.eureka.plan.service.PlanService;
-import jakarta.persistence.EntityNotFoundException;
+import com.comprehensive.eureka.plan.service.util.DuplicateChecker;
 import jakarta.transaction.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlanServiceImpl implements PlanService {
 
+    private final DuplicateChecker duplicateChecker;
+
     private final PlanRepository planRepository;
-    private final PlanCategoryRepository planCategoryRepository;
-    private final DataAllowanceRepository dataAllowanceRepository;
-    private final VoiceCallRepository voiceCallRepository;
-    private final SharedDataRepository sharedDataRepository;
-    private final BenefitGroupRepository benefitGroupRepository;
     private final BenefitRepository benefitRepository;
-    private final BenefitGroupBenefitRepository benefitGroupBenefitRepository;
     private final PlanBenefitGroupRepository planBenefitGroupRepository;
+    private final BenefitGroupBenefitRepository benefitGroupBenefitRepository;
 
     @Override
     @Transactional
     public PlanDto createPlan(PlanDto planDto) {
+        log.info("요금제 생성 요청 시작: {}", planDto.getPlanName());
+
         if (planRepository.existsByPlanName(planDto.getPlanName())) {
-            throw new IllegalArgumentException("이미 존재하는 요금제 이름입니다: " + planDto.getPlanName());
+            log.warn("이미 존재하는 요금제 이름으로 생성 시도: {}", planDto.getPlanName());
+            throw new PlanException(ErrorCode.PLAN_ALREADY_EXISTS);
         }
 
-        // 1. 하위 엔티티 생성 (혜택 제외)
-        PlanCategory category = findOrCreatePlanCategory(planDto.getPlanCategory());
-        DataAllowances dataAllowances = findOrCreateDataAllowances(planDto);
-        VoiceCall voiceCall = findOrCreateVoiceCall(planDto);
-        SharedData sharedData = findOrCreateSharedData(planDto);
+        try {
+            PlanCategory category = duplicateChecker.findOrCreatePlanCategory(planDto.getPlanCategory());
+            DataAllowances dataAllowances = duplicateChecker.findOrCreateDataAllowances(planDto);
+            VoiceCall voiceCall = duplicateChecker.findOrCreateVoiceCall(planDto);
+            SharedData sharedData = duplicateChecker.findOrCreateSharedData(planDto);
 
-        // 2. Plan 엔티티 기본 정보 저장
-        Plan newPlan = new Plan();
-        newPlan.setPlanName(planDto.getPlanName());
-        newPlan.setMonthlyFee(planDto.getMonthlyFee());
-        newPlan.setPlanCategory(category);
-        newPlan.setDataAllowances(dataAllowances);
-        newPlan.setVoiceCall(voiceCall);
-        newPlan.setSharedData(sharedData);
-        Plan savedPlan = planRepository.save(newPlan);
+            Plan newPlan = new Plan();
+            newPlan.setPlanName(planDto.getPlanName());
+            newPlan.setMonthlyFee(planDto.getMonthlyFee());
+            newPlan.setPlanCategory(category);
+            newPlan.setDataAllowances(dataAllowances);
+            newPlan.setVoiceCall(voiceCall);
+            newPlan.setSharedData(sharedData);
 
-        // 3. 혜택 조합 로직 처리 및 BenefitGroup 목록 생성/조회
-        // planDto의 planName을 전달하여 BenefitGroup의 description을 동적으로 생성
-        List<BenefitGroup> benefitGroups = createBenefitCombinationsAndGetGroups(planDto.getBenefitIdList(), planDto.getPlanName());
+            Plan savedPlan = planRepository.save(newPlan);
 
-        // 4. Plan과 모든 혜택 조합(BenefitGroup)을 연결
-        for (BenefitGroup benefitGroup : benefitGroups) {
-            PlanBenefitGroup planBenefitGroup = new PlanBenefitGroup();
-            planBenefitGroup.setPlan(savedPlan);
-            planBenefitGroup.setBenefitGroup(benefitGroup);
-            planBenefitGroupRepository.save(planBenefitGroup);
+            List<BenefitGroup> benefitGroups = processBenefitCombinations(planDto.getBenefitIdList());
+
+            if (!benefitGroups.isEmpty()) {
+                List<PlanBenefitGroup> planBenefitGroups = benefitGroups.stream()
+                        .map(group -> {
+                            PlanBenefitGroup pbg = new PlanBenefitGroup();
+                            pbg.setPlan(savedPlan);
+                            pbg.setBenefitGroup(group);
+                            return pbg;
+                        })
+                        .collect(Collectors.toList());
+                planBenefitGroupRepository.saveAll(planBenefitGroups);
+            }
+
+            log.info("요금제 생성 성공: {}", savedPlan.getPlanName());
+
+            return convertToDto(savedPlan, planDto.getBenefitIdList());
+
+        } catch (PlanException e) {
+            throw e;
+
+        } catch (Exception e) {
+            log.error("요금제 생성 중 예측하지 못한 오류 발생. 요금제 이름: {}", planDto.getPlanName(), e);
+            throw new PlanException(ErrorCode.PLAN_CREATE_FAILURE);
         }
-
-        // 5. 최종 DTO로 변환하여 반환
-        // 반환 DTO에는 조합 정보가 아닌, 원래 입력된 전체 혜택 리스트를 포함
-        return convertToDto(savedPlan, planDto.getBenefitIdList());
     }
 
-    private List<BenefitGroup> createBenefitCombinationsAndGetGroups(List<Integer> benefitIdList, String planName) {
+    private List<BenefitGroup> processBenefitCombinations(List<Long> benefitIdList) {
         if (benefitIdList == null || benefitIdList.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<Long> longBenefitIdList = benefitIdList.stream().map(Long::valueOf).collect(Collectors.toList());
-        List<Benefit> allBenefits = benefitRepository.findAllById(longBenefitIdList);
+        List<Benefit> allBenefits = benefitRepository.findAllById(benefitIdList);
 
-        if (allBenefits.size() != longBenefitIdList.size()) {
-            throw new EntityNotFoundException("일부 혜택 ID를 찾을 수 없습니다.");
+        if (allBenefits.size() != benefitIdList.size()) {
+            log.warn("요청된 혜택 ID 중 일부를 찾을 수 없음. 요청 ID: {}", benefitIdList);
+            throw new PlanException(ErrorCode.BENEFIT_NOT_FOUND);
         }
+        List<BenefitGroup> singleBenefitGroups = allBenefits.stream()
+                .map(benefit -> duplicateChecker.findOrCreateBenefitGroupForCombination(List.of(benefit)))
+                .toList();
 
-        List<BenefitGroup> resultingGroups = new ArrayList<>();
-
-        // 1. 단일 혜택 조합 생성
-        for (Benefit benefit : allBenefits) {
-            // 각 혜택을 크기가 1인 리스트로 만들어 조합으로 처리
-            List<Benefit> singleCombination = List.of(benefit);
-            BenefitGroup group = findOrCreateBenefitGroupForCombination(singleCombination);
-            resultingGroups.add(group);
-        }
-
-        // 2. 타입이 다른 혜택 간의 2개 조합 생성
         Map<BenefitType, List<Benefit>> benefitsByType = allBenefits.stream()
                 .collect(Collectors.groupingBy(Benefit::getBenefitType));
 
         List<BenefitType> types = new ArrayList<>(benefitsByType.keySet());
+        List<BenefitGroup> pairBenefitGroups = new ArrayList<>();
 
         for (int i = 0; i < types.size(); i++) {
             for (int j = i + 1; j < types.size(); j++) {
@@ -119,117 +128,33 @@ public class PlanServiceImpl implements PlanService {
 
                 for (Benefit benefit1 : list1) {
                     for (Benefit benefit2 : list2) {
-                        List<Benefit> pairCombination = List.of(benefit1, benefit2);
-                        BenefitGroup group = findOrCreateBenefitGroupForCombination(pairCombination);
-                        resultingGroups.add(group);
+                        pairBenefitGroups.add(duplicateChecker.findOrCreateBenefitGroupForCombination(List.of(benefit1, benefit2)));
                     }
                 }
             }
         }
-        return resultingGroups;
-    }
-
-    private BenefitGroup findOrCreateBenefitGroupForCombination(List<Benefit> combination) {
-        List<Long> combinationIds = combination.stream()
-                .map(Benefit::getBenefitId)
-                .sorted()
+        return Stream.concat(singleBenefitGroups.stream(), pairBenefitGroups.stream())
+                .distinct()
                 .collect(Collectors.toList());
-
-        // 기존에 정확히 동일한 조합의 그룹이 있는지 확인
-        List<BenefitGroup> existingGroups = benefitGroupRepository.findBenefitGroupsByExactBenefits(combinationIds);
-        if (!existingGroups.isEmpty()) {
-            return existingGroups.get(0); // 있으면 재사용
-        }
-
-        // 없으면 새로 생성
-        // 예: "5G 프리미어 요금제 넷플릭스 & 유튜브 프리미엄 조합"
-        String description = combination.stream()
-                .map(Benefit::getBenefitName)
-                .collect(Collectors.joining(" & ")) + " 조합";
-
-        BenefitGroup newBenefitGroup = new BenefitGroup();
-        newBenefitGroup.setDescription(description);
-        BenefitGroup savedBenefitGroup = benefitGroupRepository.save(newBenefitGroup);
-
-        // BenefitGroup과 Benefit을 중간 테이블(BenefitGroupBenefit)로 연결
-        for (Benefit benefit : combination) {
-            BenefitGroupBenefit join = new BenefitGroupBenefit();
-            join.setBenefitGroup(savedBenefitGroup);
-            join.setBenefit(benefit);
-            benefitGroupBenefitRepository.save(join);
-        }
-
-        return savedBenefitGroup;
-    }
-
-    private PlanCategory findOrCreatePlanCategory(String categoryName) {
-        return planCategoryRepository.findByCategoryName(categoryName)
-                .orElseGet(() -> {
-                    PlanCategory newCategory = new PlanCategory();
-                    newCategory.setCategoryName(categoryName);
-                    return planCategoryRepository.save(newCategory);
-                });
-    }
-
-    private DataAllowances findOrCreateDataAllowances(PlanDto dto) {
-
-        return dataAllowanceRepository.findByDataAmountAndDataUnitAndDataPeriod(
-                        dto.getDataAllowance(), dto.getDataAllowanceUnit(), DataPeriod.MONTH)
-                .orElseGet(() -> {
-                    DataAllowances newData = new DataAllowances();
-                    newData.setDataAmount(dto.getDataAllowance());
-                    newData.setDataUnit(dto.getDataAllowanceUnit());
-                    newData.setDataPeriod(dto.getDataPeriod());
-                    return dataAllowanceRepository.save(newData);
-                });
-    }
-
-    private VoiceCall findOrCreateVoiceCall(PlanDto dto) {
-        return voiceCallRepository.findByVoiceAllowanceAndAdditionalCallAllowance(
-                        dto.getVoiceAllowance(), dto.getAdditionalCallAllowance())
-                .orElseGet(() -> {
-                    VoiceCall newVoiceCall = new VoiceCall();
-                    newVoiceCall.setVoiceAllowance(dto.getVoiceAllowance());
-                    newVoiceCall.setAdditionalCallAllowance(dto.getAdditionalCallAllowance());
-                    return voiceCallRepository.save(newVoiceCall);
-                });
-    }
-
-    private SharedData findOrCreateSharedData(PlanDto dto) {
-        return sharedDataRepository.findByTetheringDataAmountAndTetheringDataUnitAndFamilyDataAmountAndFamilyDataUnit(
-                dto.getTetheringDataAmount(), dto.getTetheringDataUnit(), dto.getFamilyDataAmount(), dto.getFamilyDataUnit()
-        ).orElseGet(() -> {
-            SharedData newSharedData = new SharedData();
-            newSharedData.setTetheringDataAmount(dto.getTetheringDataAmount());
-            newSharedData.setTetheringDataUnit(dto.getTetheringDataUnit());
-            newSharedData.setFamilyDataAmount(dto.getFamilyDataAmount());
-            newSharedData.setFamilyDataUnit(dto.getFamilyDataUnit());
-            newSharedData.setFamilyDataAvailable(dto.getFamilyDataAmount() != null && dto.getFamilyDataAmount() > 0);
-            return sharedDataRepository.save(newSharedData);
-        });
     }
 
     @Override
     @Transactional
     public List<PlanDto> getAllPlans() {
-        // N+1 문제 방지를 위해 fetch join 사용
         List<Plan> plans = planRepository.findAllWithBasicDetails();
 
         return plans.stream().map(plan -> {
-            // 중복을 방지하기 위해 Set 사용
-            Set<Integer> benefitIds = new HashSet<>();
+            Set<Long> benefitIds = new HashSet<>();
 
-            // Plan과 연결된 모든 BenefitGroup 조회
             List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findByPlan_PlanId(plan.getPlanId());
 
             for (PlanBenefitGroup planBenefitGroup : planBenefitGroups) {
-                // 각 BenefitGroup에 속한 모든 Benefit 조회
                 List<BenefitGroupBenefit> groupBenefits =
                         benefitGroupBenefitRepository.findByBenefitGroup_BenefitGroupId(
                                 planBenefitGroup.getBenefitGroup().getBenefitGroupId());
 
                 for (BenefitGroupBenefit groupBenefit : groupBenefits) {
-                    benefitIds.add(groupBenefit.getBenefit().getBenefitId().intValue());
+                    benefitIds.add(groupBenefit.getBenefit().getBenefitId());
                 }
             }
 
@@ -251,7 +176,7 @@ public class PlanServiceImpl implements PlanService {
         }).collect(Collectors.toList());
     }
 
-    private PlanDto convertToDto(Plan plan, List<Integer> originalBenefitIds) {
+    private PlanDto convertToDto(Plan plan, List<Long> originalBenefitIds) {
         return PlanDto.builder()
                 .planName(plan.getPlanName())
                 .planCategory(plan.getPlanCategory().getCategoryName())

@@ -21,5 +21,5 @@ public class PlanDto {
     private Integer VoiceAllowance;
     private Integer additionalCallAllowance;
     private Integer monthlyFee;
-    private List<Integer> benefitIdList;
+    private List<Long> benefitIdList;
 }
