@@ -43,14 +43,9 @@ public class PlanServiceImpl implements PlanService {
     private final DuplicateChecker duplicateChecker;
 
     private final PlanRepository planRepository;
-    private final PlanCategoryRepository planCategoryRepository;
-    private final DataAllowanceRepository dataAllowanceRepository;
-    private final VoiceCallRepository voiceCallRepository;
-    private final SharedDataRepository sharedDataRepository;
-    private final BenefitGroupRepository benefitGroupRepository;
     private final BenefitRepository benefitRepository;
-    private final BenefitGroupBenefitRepository benefitGroupBenefitRepository;
     private final PlanBenefitGroupRepository planBenefitGroupRepository;
+    private final BenefitGroupBenefitRepository benefitGroupBenefitRepository;
 
     @Override
     @Transactional
@@ -146,24 +141,20 @@ public class PlanServiceImpl implements PlanService {
     @Override
     @Transactional
     public List<PlanDto> getAllPlans() {
-        // N+1 문제 방지를 위해 fetch join 사용
         List<Plan> plans = planRepository.findAllWithBasicDetails();
 
         return plans.stream().map(plan -> {
-            // 중복을 방지하기 위해 Set 사용
-            Set<Integer> benefitIds = new HashSet<>();
+            Set<Long> benefitIds = new HashSet<>();
 
-            // Plan과 연결된 모든 BenefitGroup 조회
             List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findByPlan_PlanId(plan.getPlanId());
 
             for (PlanBenefitGroup planBenefitGroup : planBenefitGroups) {
-                // 각 BenefitGroup에 속한 모든 Benefit 조회
                 List<BenefitGroupBenefit> groupBenefits =
                         benefitGroupBenefitRepository.findByBenefitGroup_BenefitGroupId(
                                 planBenefitGroup.getBenefitGroup().getBenefitGroupId());
 
                 for (BenefitGroupBenefit groupBenefit : groupBenefits) {
-                    benefitIds.add(groupBenefit.getBenefit().getBenefitId().intValue());
+                    benefitIds.add(groupBenefit.getBenefit().getBenefitId());
                 }
             }
 
