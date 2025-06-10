@@ -6,7 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {
-    // 요금제 CRUD 관련 에러 코드 (40000 ~ 40029)
     PLAN_NOT_FOUND(40000, "PLAN_NOT_FOUND", "요금제를 찾을 수 없습니다."),
     PLAN_ALREADY_EXISTS(40001, "PLAN_ALREADY_EXISTS", "이미 존재하는 요금제입니다."),
     PLAN_CREATE_FAILURE(40002, "PLAN_CREATE_FAILURE", "요금제 생성에 실패했습니다."),
@@ -14,7 +13,6 @@ public enum ErrorCode {
     PLAN_DELETE_FAILURE(40004, "PLAN_DELETE_FAILURE", "요금제 삭제에 실패했습니다."),
     PLAN_IN_USE(40005, "PLAN_IN_USE", "사용 중인 요금제는 삭제할 수 없습니다."),
 
-    // 혜택 및 하위 엔티티 관련
     BENEFIT_NOT_FOUND(40030, "BENEFIT_NOT_FOUND", "존재하지 않는 혜택 ID가 포함되어 있습니다."),
     BENEFIT_GROUP_CREATE_FAILURE(40031, "BENEFIT_GROUP_CREATE_FAILURE", "혜택 그룹 생성에 실패했습니다."),
     BENEFIT_GROUP_NOT_FOUND(40032, "BENEFIT_GROUP_NOT_FOUND", "혜택 그룹을 찾을 수 없습니다."),
