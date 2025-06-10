@@ -29,8 +29,4 @@ public class PlanBenefitGroup {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "benefit_group_id")
     private BenefitGroup benefitGroup;
-
-    @OneToMany(mappedBy = "planBenefitGroup")
-    private List<UserPlanRecord> userPlanRecords = new ArrayList<>();
-
 }

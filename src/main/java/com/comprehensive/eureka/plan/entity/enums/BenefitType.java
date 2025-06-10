@@ -1,4 +1,4 @@
-package com.comprehensive.eureka.plan.enums;
+package com.comprehensive.eureka.plan.entity.enums;
 
 import lombok.Getter;
 

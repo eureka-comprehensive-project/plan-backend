@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>요금제 등록 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #f4f7f9;
+            padding: 40px 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .submit-btn {
+            grid-column: 1 / -1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            background-color: #007bff;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 20px;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        #response {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+            display: none; /* Initially hidden */
+        }
+        .response-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .response-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        small {
+            color: #777;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>요금제 등록</h1>
+    <form id="plan-form">
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label for="planName">요금제 이름</label>
+                <input type="text" id="planName" name="planName" value="데이터ON 프리미엄" required>
+            </div>
+            <div class="form-group">
+                <label for="planCategory">요금제 카테고리</label>
+                <input type="text" id="planCategory" name="planCategory" value="5G 일반" required>
+            </div>
+            <div class="form-group">
+                <label for="monthlyFee">월정액 (원)</label>
+                <input type="number" id="monthlyFee" name="monthlyFee" value="130000" required>
+            </div>
+
+            <div class="form-group">
+                <label for="dataAllowance">기본 데이터</label>
+                <input type="number" id="dataAllowance" name="dataAllowance" value="0" required>
+                <small>0 입력 시 '무제한'</small>
+            </div>
+            <div class="form-group">
+                <label for="dataAllowanceUnit">데이터 단위</label>
+                <input type="text" id="dataAllowanceUnit" name="dataAllowanceUnit" value="GB" required>
+            </div>
+            <div class="form-group full-width">
+                <label for="dataPeriod">데이터 제공 주기</label>
+                <select id="dataPeriod" name="dataPeriod" required>
+                    <option value="MONTH" selected>월(MONTH)</option>
+                    <option value="DAY">일(DAY)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="tetheringDataAmount">테더링/쉐어링 데이터</label>
+                <input type="number" id="tetheringDataAmount" name="tetheringDataAmount" value="50">
+            </div>
+            <div class="form-group">
+                <label for="tetheringDataUnit">테더링 단위</label>
+                <input type="text" id="tetheringDataUnit" name="tetheringDataUnit" value="GB">
+            </div>
+            <div class="form-group">
+                <label for="familyDataAmount">가족 공유 데이터</label>
+                <input type="number" id="familyDataAmount" name="familyDataAmount" value="50">
+            </div>
+            <div class="form-group">
+                <label for="familyDataUnit">가족 공유 단위</label>
+                <input type="text" id="familyDataUnit" name="familyDataUnit" value="GB">
+            </div>
+
+            <div class="form-group">
+                <label for="voiceAllowance">음성 통화</label>
+                <input type="number" id="voiceAllowance" name="voiceAllowance" value="0">
+                <small>0 입력 시 '무제한'</small>
+            </div>
+            <div class="form-group">
+                <label for="additionalCallAllowance">부가 통화 (분)</label>
+                <input type="number" id="additionalCallAllowance" name="additionalCallAllowance" value="300">
+            </div>
+
+            <div class="form-group full-width">
+                <label for="benefitIdList">혜택 ID 목록</label>
+                <input type="text" id="benefitIdList" name="benefitIdList" value="1, 2, 5">
+                <small>쉼표(,)로 구분하여 숫자 ID를 입력하세요. (예: 1, 2, 5)</small>
+            </div>
+
+            <button type="submit" class="submit-btn">요금제 등록하기</button>
+        </div>
+    </form>
+
+    <div id="response"></div>
+
+</div>
+
+<script>
+    // 폼 제출 이벤트 리스너
+    document.getElementById('plan-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        const form = event.target;
+        const responseDiv = document.getElementById('response');
+
+        // 폼 데이터를 DTO 구조에 맞는 JavaScript 객체로 변환
+        const planData = {
+            planName: form.planName.value,
+            planCategory: form.planCategory.value,
+            monthlyFee: parseInt(form.monthlyFee.value, 10),
+
+            dataAllowance: parseInt(form.dataAllowance.value, 10),
+            dataAllowanceUnit: form.dataAllowanceUnit.value,
+            dataPeriod: form.dataPeriod.value,
+
+            tetheringDataAmount: parseInt(form.tetheringDataAmount.value, 10) || 0,
+            tetheringDataUnit: form.tetheringDataUnit.value,
+            familyDataAmount: parseInt(form.familyDataAmount.value, 10) || 0,
+            familyDataUnit: form.familyDataUnit.value,
+
+            voiceAllowance: parseInt(form.voiceAllowance.value, 10),
+            additionalCallAllowance: parseInt(form.additionalCallAllowance.value, 10),
+
+            // 쉼표로 구분된 문자열을 숫자 배열로 변환
+            benefitIdList: form.benefitIdList.value
+                .split(',') // 쉼표로 분리
+                .map(id => id.trim()) // 각 ID의 양쪽 공백 제거
+                .filter(id => id) // 빈 문자열 제거
+                .map(id => parseInt(id, 10)) // 숫자로 변환
+        };
+
+        console.log('Sending JSON data:', JSON.stringify(planData, null, 2));
+
+        // fetch API를 사용하여 서버에 POST 요청 전송
+        fetch('/api/plans', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(planData),
+        })
+            .then(async response => {
+                const responseText = await response.text();
+                if (!response.ok) {
+                    // 응답이 성공적이지 않으면(e.g., 400, 500) 에러로 처리
+                    throw new Error(responseText || `HTTP error! status: ${response.status}`);
+                }
+                return responseText;
+            })
+            .then(data => {
+                // 성공 응답 처리
+                responseDiv.textContent = data;
+                responseDiv.className = 'response-success';
+                responseDiv.style.display = 'block';
+            })
+            .catch(error => {
+                // 실패(네트워크 오류 또는 HTTP 에러) 응답 처리
+                responseDiv.textContent = '오류 발생: ' + error.message;
+                responseDiv.className = 'response-error';
+                responseDiv.style.display = 'block';
+            });
+    });
+</script>
+
+</body>
+</html>
