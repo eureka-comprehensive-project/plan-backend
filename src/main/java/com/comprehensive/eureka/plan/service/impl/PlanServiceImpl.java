@@ -51,13 +51,11 @@ public class PlanServiceImpl implements PlanService {
             throw new IllegalArgumentException("이미 존재하는 요금제 이름입니다: " + planDto.getPlanName());
         }
 
-        // 1. 하위 엔티티 생성 (혜택 제외)
         PlanCategory category = findOrCreatePlanCategory(planDto.getPlanCategory());
         DataAllowances dataAllowances = findOrCreateDataAllowances(planDto);
         VoiceCall voiceCall = findOrCreateVoiceCall(planDto);
         SharedData sharedData = findOrCreateSharedData(planDto);
 
-        // 2. Plan 엔티티 기본 정보 저장
         Plan newPlan = new Plan();
         newPlan.setPlanName(planDto.getPlanName());
         newPlan.setMonthlyFee(planDto.getMonthlyFee());
@@ -67,11 +65,8 @@ public class PlanServiceImpl implements PlanService {
         newPlan.setSharedData(sharedData);
         Plan savedPlan = planRepository.save(newPlan);
 
-        // 3. 혜택 조합 로직 처리 및 BenefitGroup 목록 생성/조회
-        // planDto의 planName을 전달하여 BenefitGroup의 description을 동적으로 생성
         List<BenefitGroup> benefitGroups = createBenefitCombinationsAndGetGroups(planDto.getBenefitIdList(), planDto.getPlanName());
 
-        // 4. Plan과 모든 혜택 조합(BenefitGroup)을 연결
         for (BenefitGroup benefitGroup : benefitGroups) {
             PlanBenefitGroup planBenefitGroup = new PlanBenefitGroup();
             planBenefitGroup.setPlan(savedPlan);
@@ -79,8 +74,6 @@ public class PlanServiceImpl implements PlanService {
             planBenefitGroupRepository.save(planBenefitGroup);
         }
 
-        // 5. 최종 DTO로 변환하여 반환
-        // 반환 DTO에는 조합 정보가 아닌, 원래 입력된 전체 혜택 리스트를 포함
         return convertToDto(savedPlan, planDto.getBenefitIdList());
     }
 
@@ -98,15 +91,12 @@ public class PlanServiceImpl implements PlanService {
 
         List<BenefitGroup> resultingGroups = new ArrayList<>();
 
-        // 1. 단일 혜택 조합 생성
         for (Benefit benefit : allBenefits) {
-            // 각 혜택을 크기가 1인 리스트로 만들어 조합으로 처리
             List<Benefit> singleCombination = List.of(benefit);
             BenefitGroup group = findOrCreateBenefitGroupForCombination(singleCombination);
             resultingGroups.add(group);
         }
 
-        // 2. 타입이 다른 혜택 간의 2개 조합 생성
         Map<BenefitType, List<Benefit>> benefitsByType = allBenefits.stream()
                 .collect(Collectors.groupingBy(Benefit::getBenefitType));
 
@@ -135,14 +125,11 @@ public class PlanServiceImpl implements PlanService {
                 .sorted()
                 .collect(Collectors.toList());
 
-        // 기존에 정확히 동일한 조합의 그룹이 있는지 확인
         List<BenefitGroup> existingGroups = benefitGroupRepository.findBenefitGroupsByExactBenefits(combinationIds);
         if (!existingGroups.isEmpty()) {
-            return existingGroups.get(0); // 있으면 재사용
+            return existingGroups.get(0);
         }
 
-        // 없으면 새로 생성
-        // 예: "5G 프리미어 요금제 넷플릭스 & 유튜브 프리미엄 조합"
         String description = combination.stream()
                 .map(Benefit::getBenefitName)
                 .collect(Collectors.joining(" & ")) + " 조합";
@@ -151,7 +138,6 @@ public class PlanServiceImpl implements PlanService {
         newBenefitGroup.setDescription(description);
         BenefitGroup savedBenefitGroup = benefitGroupRepository.save(newBenefitGroup);
 
-        // BenefitGroup과 Benefit을 중간 테이블(BenefitGroupBenefit)로 연결
         for (Benefit benefit : combination) {
             BenefitGroupBenefit join = new BenefitGroupBenefit();
             join.setBenefitGroup(savedBenefitGroup);
@@ -212,18 +198,14 @@ public class PlanServiceImpl implements PlanService {
     @Override
     @Transactional
     public List<PlanDto> getAllPlans() {
-        // N+1 문제 방지를 위해 fetch join 사용
         List<Plan> plans = planRepository.findAllWithBasicDetails();
 
         return plans.stream().map(plan -> {
-            // 중복을 방지하기 위해 Set 사용
             Set<Integer> benefitIds = new HashSet<>();
 
-            // Plan과 연결된 모든 BenefitGroup 조회
             List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findByPlan_PlanId(plan.getPlanId());
 
             for (PlanBenefitGroup planBenefitGroup : planBenefitGroups) {
-                // 각 BenefitGroup에 속한 모든 Benefit 조회
                 List<BenefitGroupBenefit> groupBenefits =
                         benefitGroupBenefitRepository.findByBenefitGroup_BenefitGroupId(
                                 planBenefitGroup.getBenefitGroup().getBenefitGroupId());
