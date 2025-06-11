@@ -1,5 +1,6 @@
 package com.comprehensive.eureka.plan.service.impl;
 
+import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.entity.Benefit;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
@@ -284,6 +285,26 @@ public class PlanServiceImpl implements PlanService {
 
         return convertToDto(plan, new ArrayList<>(benefitIds));
 
+    }
+
+    @Override
+    public List<BenefitDto> getAllBenefitsByPlanId(Integer planId) {
+        if (!planRepository.existsById(planId)) {
+            throw new PlanException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
+        List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findAllWithBenefitsByPlanId(planId); //
+
+        return planBenefitGroups.stream()
+                .flatMap(pbg -> pbg.getBenefitGroup().getBenefitGroupBenefits().stream())
+                .map(BenefitGroupBenefit::getBenefit)
+                .distinct()
+                .map(benefit -> BenefitDto.builder()
+                        .benefitId(benefit.getBenefitId())
+                        .benefitName(benefit.getBenefitName())
+                        .benefitType(benefit.getBenefitType())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private PlanDto convertToDto(Plan plan, List<Long> originalBenefitIds) {
