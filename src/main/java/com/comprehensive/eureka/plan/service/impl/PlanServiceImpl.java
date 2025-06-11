@@ -184,7 +184,7 @@ public class PlanServiceImpl implements PlanService {
             throw new PlanException(ErrorCode.PLAN_NOT_FOUND);
         }
 
-        List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findAllWithBenefitsByPlanId(planId); //
+        List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findAllWithBenefitsByPlanId(planId);
 
         return planBenefitGroups.stream()
                 .flatMap(pbg -> pbg.getBenefitGroup().getBenefitGroupBenefits().stream())
