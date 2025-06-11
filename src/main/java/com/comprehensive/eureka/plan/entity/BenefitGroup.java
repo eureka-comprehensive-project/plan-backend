@@ -29,6 +29,6 @@ public class BenefitGroup {
     @OneToMany(mappedBy = "benefitGroup")
     private List<PlanBenefitGroup> planBenefitGroups = new ArrayList<>();
 
-    @OneToMany(mappedBy = "benefitGroup")
+    @OneToMany(mappedBy = "benefitGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BenefitGroupBenefit> benefitGroupBenefits = new HashSet<>();
 }
