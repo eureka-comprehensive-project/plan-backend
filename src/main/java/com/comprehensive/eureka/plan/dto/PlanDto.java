@@ -19,7 +19,7 @@ public class PlanDto {
     private String tetheringDataUnit;
     private Integer familyDataAmount;
     private String familyDataUnit;
-    private Integer VoiceAllowance;
+    private Integer voiceAllowance;
     private Integer additionalCallAllowance;
     private Integer monthlyFee;
     private List<Long> benefitIdList;
