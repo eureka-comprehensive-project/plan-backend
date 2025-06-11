@@ -45,6 +45,7 @@ public class PlanServiceImpl implements PlanService {
 
     private final PlanRepository planRepository;
     private final BenefitRepository benefitRepository;
+    private final BenefitGroupRepository benefitGroupRepository;
     private final PlanBenefitGroupRepository planBenefitGroupRepository;
     private final BenefitGroupBenefitRepository benefitGroupBenefitRepository;
 
@@ -248,36 +249,85 @@ public class PlanServiceImpl implements PlanService {
         }
 
         List<Benefit> allBenefits = benefitRepository.findAllById(benefitIdList);
-
         if (allBenefits.size() != benefitIdList.size()) {
             log.warn("요청된 혜택 ID 중 일부를 찾을 수 없음. 요청 ID: {}", benefitIdList);
             throw new PlanException(ErrorCode.BENEFIT_NOT_FOUND);
         }
-        List<BenefitGroup> singleBenefitGroups = allBenefits.stream()
-                .map(benefit -> duplicateChecker.findOrCreateBenefitGroupForCombination(List.of(benefit)))
-                .toList();
 
+        Map<Long, Benefit> benefitMap = allBenefits.stream()
+                .collect(Collectors.toMap(Benefit::getBenefitId, benefit -> benefit));
+
+        Set<Set<Long>> requiredCombinationIds = new HashSet<>();
+        for (Benefit benefit : allBenefits) {
+            requiredCombinationIds.add(Set.of(benefit.getBenefitId()));
+        }
         Map<BenefitType, List<Benefit>> benefitsByType = allBenefits.stream()
                 .collect(Collectors.groupingBy(Benefit::getBenefitType));
-
         List<BenefitType> types = new ArrayList<>(benefitsByType.keySet());
-        List<BenefitGroup> pairBenefitGroups = new ArrayList<>();
 
         for (int i = 0; i < types.size(); i++) {
             for (int j = i + 1; j < types.size(); j++) {
                 List<Benefit> list1 = benefitsByType.get(types.get(i));
                 List<Benefit> list2 = benefitsByType.get(types.get(j));
-
                 for (Benefit benefit1 : list1) {
                     for (Benefit benefit2 : list2) {
-                        pairBenefitGroups.add(duplicateChecker.findOrCreateBenefitGroupForCombination(List.of(benefit1, benefit2)));
+                        requiredCombinationIds.add(Set.of(benefit1.getBenefitId(), benefit2.getBenefitId()));
                     }
                 }
             }
         }
-        return Stream.concat(singleBenefitGroups.stream(), pairBenefitGroups.stream())
-                .distinct()
-                .collect(Collectors.toList());
+
+        Map<Set<Long>, BenefitGroup> existingGroupsMap = benefitGroupRepository
+                .findByBenefitIdsWithBenefits(new HashSet<>(benefitIdList)).stream()
+                .collect(Collectors.toMap(
+                        group -> group.getBenefitGroupBenefits().stream()
+                                .map(bgb -> bgb.getBenefit().getBenefitId())
+                                .collect(Collectors.toSet()),
+                        group -> group,
+                        (existing, replacement) -> existing
+                ));
+
+        List<BenefitGroup> resultGroups = new ArrayList<>();
+
+        for (Set<Long> combinationIds : requiredCombinationIds) {
+            BenefitGroup group = existingGroupsMap.get(combinationIds);
+
+            if (group != null) {
+                resultGroups.add(group);
+            } else {
+                BenefitGroup newGroup = createNewBenefitGroup(combinationIds, benefitMap);
+                benefitGroupRepository.save(newGroup);
+                resultGroups.add(newGroup);
+
+                existingGroupsMap.put(combinationIds, newGroup);
+            }
+        }
+
+        return resultGroups;
+    }
+
+    private BenefitGroup createNewBenefitGroup(Set<Long> combinationIds, Map<Long, Benefit> benefitMap) {
+        log.info("새로운 혜택 그룹 생성. 혜택 ID: {}", combinationIds);
+
+        List<Benefit> combinationBenefits = combinationIds.stream()
+                .map(benefitMap::get)
+                .toList();
+
+        BenefitGroup newGroup = new BenefitGroup();
+        newGroup.setDescription(combinationBenefits.stream()
+                .map(Benefit::getBenefitName)
+                .sorted()
+                .collect(Collectors.joining(", ")));
+
+        Set<BenefitGroupBenefit> bgbSet = combinationBenefits.stream().map(benefit -> {
+            BenefitGroupBenefit bgb = new BenefitGroupBenefit();
+            bgb.setBenefitGroup(newGroup);
+            bgb.setBenefit(benefit);
+            return bgb;
+        }).collect(Collectors.toSet());
+
+        newGroup.setBenefitGroupBenefits(bgbSet);
+        return newGroup;
     }
 
     private PlanDto convertToDto(Plan plan, List<Long> originalBenefitIds) {
