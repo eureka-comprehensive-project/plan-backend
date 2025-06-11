@@ -1,6 +1,8 @@
 package com.comprehensive.eureka.plan.entity;
 
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +45,6 @@ public class Plan {
     private PlanCategory planCategory;
 
     @OneToMany(mappedBy = "plan")
-    private List<PlanBenefitGroup> planBenefitGroups = new ArrayList<>();
+    private Set<PlanBenefitGroup> planBenefitGroups = new HashSet<>();
 
 }
