@@ -9,6 +9,7 @@ import lombok.Data;
 @Builder
 public class PlanDto {
 
+    private Integer planId;
     private String planName;
     private String planCategory;
     private Integer dataAllowance;

@@ -121,6 +121,7 @@ public class PlanServiceImpl implements PlanService {
             }
 
             return PlanDto.builder()
+                    .planId(plan.getPlanId())
                     .planName(plan.getPlanName())
                     .planCategory(plan.getPlanCategory() != null ? plan.getPlanCategory().getCategoryName() : null)
                     .dataAllowance(plan.getDataAllowances() != null ? plan.getDataAllowances().getDataAmount() : null)
