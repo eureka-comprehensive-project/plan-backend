@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/plans")
+@RequestMapping("/plan")
 @RequiredArgsConstructor
 public class PlanController {
 
@@ -24,5 +24,19 @@ public class PlanController {
     public BaseResponseDto<List<PlanDto>> getAllPlans() {
         List<PlanDto> plans = planService.getAllPlans();
         return BaseResponseDto.success(plans);
+    }
+
+    @PutMapping("/{planId}")
+    public BaseResponseDto<PlanDto> updatePlan(
+            @PathVariable Integer planId,
+            @RequestBody PlanDto planDto) {
+        PlanDto updatedPlan = planService.updatePlan(planId, planDto);
+        return BaseResponseDto.success(updatedPlan);
+    }
+
+    @GetMapping("/{planId}")
+    public BaseResponseDto<PlanDto> getPlanById(@PathVariable Integer planId) {
+        PlanDto plan = planService.getPlanById(planId);
+        return BaseResponseDto.success(plan);
     }
 }
