@@ -434,4 +434,8 @@ public class PlanServiceImpl implements PlanService {
                 .distinct()
                 .collect(Collectors.toList());
     }
+
+    public int countPlansWithFilter(PlanFilterRequestDto requestDto) {
+        return planRepository.countPlansWithFilter(requestDto);
+    }
 }

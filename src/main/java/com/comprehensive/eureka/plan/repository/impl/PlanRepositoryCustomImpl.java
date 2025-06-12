@@ -149,4 +149,31 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                         .and(benefit.benefitId.in(filterRequest.getBenefitIds())))
                 .exists();
     }
+
+    @Override
+    public int countPlansWithFilter(PlanFilterRequestDto filterRequest) {
+        BooleanBuilder builder = new BooleanBuilder();
+
+        builder.and(categoryFilter(filterRequest));
+        builder.and(priceRangeFilter(filterRequest));
+        builder.and(dataOptionFilter(filterRequest));
+        builder.and(benefitFilter(filterRequest));
+
+        Long count = queryFactory
+                .select(plan.count())
+                .from(plan)
+                .leftJoin(plan.planCategory, planCategory)
+                .leftJoin(plan.dataAllowances, dataAllowances)
+                .leftJoin(plan.voiceCall, voiceCall)
+                .leftJoin(plan.sharedData, sharedData)
+                .leftJoin(plan.planBenefitGroups, planBenefitGroup)
+                .leftJoin(planBenefitGroup.benefitGroup, benefitGroup)
+                .leftJoin(benefitGroup.benefitGroupBenefits, benefitGroupBenefit)
+                .leftJoin(benefitGroupBenefit.benefit, benefit)
+                .where(builder)
+                .fetchOne();
+
+        return count != null ? count.intValue() : 0;
+    }
+
 }
