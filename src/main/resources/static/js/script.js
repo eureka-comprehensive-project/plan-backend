@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyBenefitChangesBtn = document.getElementById('apply-benefit-changes-btn');
     const cancelBenefitBtn = document.getElementById('cancel-benefit-btn');
 
+    // 새로 추가: 총 요금제 개수 표시를 위한 DOM 요소 참조
+    const totalPlanCountSpan = document.getElementById('total-plan-count');
+
     // --- State Management ---
     let currentPlanId = null;
     let stagedBenefitIds = new Set();
@@ -71,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         planListContainer.innerHTML = '';
         if (!plans || plans.length === 0) {
             planListContainer.innerHTML = '<p>조건에 맞는 요금제가 없습니다.</p>';
+            totalPlanCountSpan.textContent = 0; // 요금제가 없으면 0개로 표시
             return;
         }
         plans.forEach(plan => {
@@ -85,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             planItem.addEventListener('click', () => handleEditPlan(plan.planId));
             planListContainer.appendChild(planItem);
         });
+        totalPlanCountSpan.textContent = plans.length; // 요금제 개수 업데이트
     };
 
     // --- Core Loading Function ---
@@ -102,17 +107,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let response;
             if (isFiltering) {
+                // 필터링 요청 시
                 response = await api.filterPlans(requestData);
             } else {
+                // 전체 목록 요청 시
                 response = await api.getPlans();
             }
 
+            // API 응답 구조에 따라 'data' 속성 또는 직접 응답 사용
             const plans = response.data || response;
-            renderPlanList(plans);
+            renderPlanList(plans); // 요금제 목록을 렌더링하고 개수를 업데이트
 
         } catch (error) {
             console.error('요금제 목록 로딩 실패:', error);
             planListContainer.innerHTML = `<p>요금제 목록을 불러오는 중 오류가 발생했습니다.</p>`;
+            totalPlanCountSpan.textContent = 0; // 오류 발생 시 0개로 표시
         }
     };
 
@@ -130,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filterForm.reset();
         handleFilterCheckboxes();
-        loadPlans();
+        loadPlans(); // 탭 변경 시 요금제 다시 로드
     };
 
     const handleFilterToggle = () => {
@@ -157,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             benefitIds: filterForm.querySelector('#noBenefits').checked ? [] : benefitIds,
         };
 
-        loadPlans(filterData);
+        loadPlans(filterData); // 필터 적용 시 요금제 로드
     };
 
     const handleFilterCheckboxes = () => {
@@ -225,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fetchResponse.ok && (result.statusCode === 200 || result.statusCode === 201)) {
                 alert(`요금제가 성공적으로 ${currentPlanId ? '수정' : '등록'}되었습니다.`);
                 closeAllModals();
-                loadPlans();
+                loadPlans(); // 변경 후 요금제 다시 로드
             } else {
                 throw new Error(result.data.message || '알 수 없는 오류가 발생했습니다.');
             }
