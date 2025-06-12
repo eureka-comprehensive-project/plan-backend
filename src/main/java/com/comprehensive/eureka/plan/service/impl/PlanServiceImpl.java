@@ -1,6 +1,7 @@
 package com.comprehensive.eureka.plan.service.impl;
 
 import com.comprehensive.eureka.plan.dto.PlanDto;
+import com.comprehensive.eureka.plan.dto.request.PlanFilterRequest;
 import com.comprehensive.eureka.plan.entity.Benefit;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
 import com.comprehensive.eureka.plan.entity.BenefitGroupBenefit;
@@ -14,15 +15,7 @@ import com.comprehensive.eureka.plan.entity.enums.BenefitType;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.exception.ErrorCode;
 import com.comprehensive.eureka.plan.exception.PlanException;
-import com.comprehensive.eureka.plan.repository.BenefitGroupBenefitRepository;
-import com.comprehensive.eureka.plan.repository.BenefitGroupRepository;
-import com.comprehensive.eureka.plan.repository.BenefitRepository;
-import com.comprehensive.eureka.plan.repository.DataAllowanceRepository;
-import com.comprehensive.eureka.plan.repository.PlanBenefitGroupRepository;
-import com.comprehensive.eureka.plan.repository.PlanCategoryRepository;
-import com.comprehensive.eureka.plan.repository.PlanRepository;
-import com.comprehensive.eureka.plan.repository.SharedDataRepository;
-import com.comprehensive.eureka.plan.repository.VoiceCallRepository;
+import com.comprehensive.eureka.plan.repository.*;
 import com.comprehensive.eureka.plan.service.PlanService;
 import com.comprehensive.eureka.plan.service.util.DuplicateChecker;
 import jakarta.transaction.Transactional;
@@ -131,7 +124,7 @@ public class PlanServiceImpl implements PlanService {
                     .tetheringDataUnit(plan.getSharedData() != null ? plan.getSharedData().getTetheringDataUnit() : null)
                     .familyDataAmount(plan.getSharedData() != null ? plan.getSharedData().getFamilyDataAmount() : null)
                     .familyDataUnit(plan.getSharedData() != null ? plan.getSharedData().getFamilyDataUnit() : null)
-                    .VoiceAllowance(plan.getVoiceCall() != null ? plan.getVoiceCall().getVoiceAllowance() : null)
+                    .voiceAllowance(plan.getVoiceCall() != null ? plan.getVoiceCall().getVoiceAllowance() : null)
                     .additionalCallAllowance(plan.getVoiceCall() != null ? plan.getVoiceCall().getAdditionalCallAllowance() : null)
                     .monthlyFee(plan.getMonthlyFee())
                     .benefitIdList(new ArrayList<>(benefitIds))
@@ -298,7 +291,7 @@ public class PlanServiceImpl implements PlanService {
                 .tetheringDataUnit(plan.getSharedData().getTetheringDataUnit())
                 .familyDataAmount(plan.getSharedData().getFamilyDataAmount())
                 .familyDataUnit(plan.getSharedData().getFamilyDataUnit())
-                .VoiceAllowance(plan.getVoiceCall().getVoiceAllowance())
+                .voiceAllowance(plan.getVoiceCall().getVoiceAllowance())
                 .additionalCallAllowance(plan.getVoiceCall().getAdditionalCallAllowance())
                 .monthlyFee(plan.getMonthlyFee())
                 .benefitIdList(originalBenefitIds)

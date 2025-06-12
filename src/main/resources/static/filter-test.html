@@ -1,0 +1,81 @@
+<!-- filter-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>요금제 필터 테스트</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h2>📦 요금제 필터 검색</h2>
+
+<form id="filterForm">
+    <label>카테고리 ID: <input type="number" name="categoryId"></label><br>
+    <label>최소 가격: <input type="number" name="minPrice"></label><br>
+    <label>최대 가격: <input type="number" name="maxPrice"></label><br>
+    <label><input type="checkbox" name="largeData"> 대용량 데이터만</label><br>
+    <label><input type="checkbox" name="smallData"> 소용량 데이터만</label><br>
+    <label><input type="checkbox" name="hasBenefit"> 혜택 포함</label><br>
+    <button type="button" onclick="submitFilter()">🔍 검색</button>
+</form>
+
+<h3>📋 검색 결과:</h3>
+<ul id="resultList"></ul>
+
+<hr>
+
+<h2>📂 카테고리로 검색</h2>
+<label>카테고리 ID: <input type="number" id="categoryInput" placeholder="예: 1 또는 0 (전체)"></label>
+<button onclick="searchByCategory()">🔍 카테고리 검색</button>
+
+<ul id="categoryResultList"></ul>
+
+<script>
+    function submitFilter() {
+        const form = $('#filterForm');
+        const filterData = {
+            categoryId: form.find('input[name="categoryId"]').val() || null,
+            minPrice: form.find('input[name="minPrice"]').val() || null,
+            maxPrice: form.find('input[name="maxPrice"]').val() || null,
+            largeData: form.find('input[name="largeData"]').is(':checked'),
+            smallData: form.find('input[name="smallData"]').is(':checked'),
+            hasBenefit: form.find('input[name="hasBenefit"]').is(':checked')
+        };
+
+        $.ajax({
+            url: 'http://localhost:8080/plan/filter',  // 경로는 실제 서버 경로로 수정
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(filterData),
+            success: function (data) {
+                $('#resultList').empty();
+                data.forEach(plan => {
+                    $('#resultList').append(`<li>${plan.name} - ${plan.price}원</li>`);
+                });
+            },
+            error: function () {
+                alert("요금제 필터 검색 실패");
+            }
+        });
+    }
+
+    function searchByCategory() {
+        const categoryId = $('#categoryInput').val();
+
+        $.ajax({
+            url: `http://localhost:8080/plan/category/${categoryId}`,
+            type: 'GET',
+            success: function (data) {
+                $('#categoryResultList').empty();
+                data.forEach(plan => {
+                    $('#categoryResultList').append(`<li>${plan.name} - ${plan.price}원</li>`);
+                });
+            },
+            error: function () {
+                alert("카테고리 검색 실패");
+            }
+        });
+    }
+</script>
+</body>
+</html>

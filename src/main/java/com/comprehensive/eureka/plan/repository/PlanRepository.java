@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PlanRepository extends JpaRepository<Plan, Integer> {
+public interface PlanRepository extends JpaRepository<Plan, Integer>, PlanRepositoryCustom {
     boolean existsByPlanName(String planName);
 
     @Query("SELECT DISTINCT p FROM Plan p " +
