@@ -40,7 +40,6 @@ public class PlanServiceImpl implements PlanService {
     private final BenefitRepository benefitRepository;
     private final BenefitGroupRepository benefitGroupRepository;
     private final PlanBenefitGroupRepository planBenefitGroupRepository;
-    private final BenefitGroupBenefitRepository benefitGroupBenefitRepository;
 
     @Override
     @Transactional
@@ -49,6 +48,8 @@ public class PlanServiceImpl implements PlanService {
 
         List<Plan> plans = planRepository.findAllWithBenefits();
 
+        log.debug("리포지토리에서 {}개의 요금제를 찾았습니다.", plans.size());
+
         return plans.stream().map(plan -> {
             List<Long> benefitIds = plan.getPlanBenefitGroups().stream()
                     .flatMap(pbg -> pbg.getBenefitGroup().getBenefitGroupBenefits().stream())
@@ -56,6 +57,7 @@ public class PlanServiceImpl implements PlanService {
                     .distinct()
                     .collect(Collectors.toList());
 
+            log.debug("요금제 ID {}를 DTO로 변환 중입니다. 혜택 ID: {}", plan.getPlanId(), benefitIds);
             return convertToDto(plan, benefitIds);
         }).collect(Collectors.toList());
     }
@@ -173,11 +175,14 @@ public class PlanServiceImpl implements PlanService {
 
     @Override
     public List<BenefitDto> getAllBenefitsByPlanId(Integer planId) {
+        log.info("plan ID: {}에 대한 getAllBenefitsByPlanId 메서드를 시작합니다.", planId);
         if (!planRepository.existsById(planId)) {
             throw new PlanException(ErrorCode.PLAN_NOT_FOUND);
         }
 
         List<PlanBenefitGroup> planBenefitGroups = planBenefitGroupRepository.findAllWithBenefitsByPlanId(planId);
+
+        log.debug("요금제 ID: {}에 대한 {}개의 PlanBenefitGroup을 찾았습니다.", planId, planBenefitGroups.size());
 
         return planBenefitGroups.stream()
                 .flatMap(pbg -> pbg.getBenefitGroup().getBenefitGroupBenefits().stream())
@@ -360,7 +365,10 @@ public class PlanServiceImpl implements PlanService {
     }
 
     public List<PlanFilterResponseDto> getFilteredPlans(PlanFilterRequestDto filterRequest) {
+        log.info("getFilteredPlans 메서드를 시작합니다. 필터 요청: {}", filterRequest);
         List<Plan> plans = planRepository.findPlansWithFilter(filterRequest);
+
+        log.debug("필터링된 요금제 {}개를 찾았습니다.", plans.size());
 
         return plans.stream()
                 .map(this::convertToResponse)
@@ -368,6 +376,7 @@ public class PlanServiceImpl implements PlanService {
     }
 
     private PlanFilterResponseDto convertToResponse(Plan plan) {
+        log.debug("Plan 객체 (ID: {})를 PlanFilterResponseDto로 변환합니다.", plan.getPlanId());
         return PlanFilterResponseDto.builder()
                 .planId(plan.getPlanId())
                 .planName(plan.getPlanName())
@@ -381,7 +390,9 @@ public class PlanServiceImpl implements PlanService {
     }
 
     private PlanFilterResponseDto.DataAllowanceInfo convertDataAllowance(Plan plan) {
+        log.trace("Plan ID: {}에 대한 DataAllowanceInfo를 변환합니다.", plan.getPlanId());
         if (plan.getDataAllowances() == null) {
+            log.debug("Plan ID: {}에 대한 DataAllowances가 null입니다.", plan.getPlanId());
             return null;
         }
 
@@ -393,7 +404,9 @@ public class PlanServiceImpl implements PlanService {
     }
 
     private PlanFilterResponseDto.VoiceCallInfo convertVoiceCall(Plan plan) {
+        log.trace("Plan ID: {}에 대한 VoiceCallInfo를 변환합니다.", plan.getPlanId());
         if (plan.getVoiceCall() == null) {
+            log.debug("Plan ID: {}에 대한 VoiceCall이 null입니다.", plan.getPlanId());
             return null;
         }
 
@@ -404,7 +417,9 @@ public class PlanServiceImpl implements PlanService {
     }
 
     private PlanFilterResponseDto.SharedDataInfo convertSharedData(Plan plan) {
+        log.trace("Plan ID: {}에 대한 SharedDataInfo를 변환합니다.", plan.getPlanId());
         if (plan.getSharedData() == null) {
+            log.debug("Plan ID: {}에 대한 SharedData가 null입니다.", plan.getPlanId());
             return null;
         }
 
@@ -418,7 +433,9 @@ public class PlanServiceImpl implements PlanService {
     }
 
     private List<PlanFilterResponseDto.BenefitInfo> convertBenefits(Plan plan) {
+        log.trace("Plan ID: {}에 대한 BenefitInfo 목록을 변환합니다.", plan.getPlanId());
         if (plan.getPlanBenefitGroups() == null) {
+            log.debug("Plan ID: {}에 대한 PlanBenefitGroups가 null입니다. 빈 목록을 반환합니다.", plan.getPlanId());
             return List.of();
         }
 
@@ -436,6 +453,7 @@ public class PlanServiceImpl implements PlanService {
     }
 
     public int countPlansWithFilter(PlanFilterRequestDto requestDto) {
+        log.info("countPlansWithFilter 메서드를 시작합니다. 필터 요청: {}", requestDto);
         return planRepository.countPlansWithFilter(requestDto);
     }
 }
