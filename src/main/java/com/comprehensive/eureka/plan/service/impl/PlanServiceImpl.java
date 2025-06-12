@@ -3,6 +3,8 @@ package com.comprehensive.eureka.plan.service.impl;
 import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
+import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
+import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
 import com.comprehensive.eureka.plan.entity.Benefit;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
 import com.comprehensive.eureka.plan.entity.BenefitGroupBenefit;
@@ -13,26 +15,16 @@ import com.comprehensive.eureka.plan.entity.PlanCategory;
 import com.comprehensive.eureka.plan.entity.SharedData;
 import com.comprehensive.eureka.plan.entity.VoiceCall;
 import com.comprehensive.eureka.plan.entity.enums.BenefitType;
-import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.exception.ErrorCode;
 import com.comprehensive.eureka.plan.exception.PlanException;
-import com.comprehensive.eureka.plan.repository.BenefitGroupBenefitRepository;
-import com.comprehensive.eureka.plan.repository.BenefitGroupRepository;
-import com.comprehensive.eureka.plan.repository.BenefitRepository;
-import com.comprehensive.eureka.plan.repository.DataAllowanceRepository;
-import com.comprehensive.eureka.plan.repository.PlanBenefitGroupRepository;
-import com.comprehensive.eureka.plan.repository.PlanCategoryRepository;
-import com.comprehensive.eureka.plan.repository.PlanRepository;
-import com.comprehensive.eureka.plan.repository.SharedDataRepository;
-import com.comprehensive.eureka.plan.repository.VoiceCallRepository;
+import com.comprehensive.eureka.plan.repository.*;
 import com.comprehensive.eureka.plan.service.PlanService;
 import com.comprehensive.eureka.plan.service.util.DuplicateChecker;
 import jakarta.transaction.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.Stream;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -359,10 +351,86 @@ public class PlanServiceImpl implements PlanService {
                 .tetheringDataUnit(plan.getSharedData().getTetheringDataUnit())
                 .familyDataAmount(plan.getSharedData().getFamilyDataAmount())
                 .familyDataUnit(plan.getSharedData().getFamilyDataUnit())
-                .VoiceAllowance(plan.getVoiceCall().getVoiceAllowance())
+                .voiceAllowance(plan.getVoiceCall().getVoiceAllowance())
                 .additionalCallAllowance(plan.getVoiceCall().getAdditionalCallAllowance())
                 .monthlyFee(plan.getMonthlyFee())
                 .benefitIdList(originalBenefitIds)
                 .build();
+    }
+
+    public List<PlanFilterResponseDto> getFilteredPlans(PlanFilterRequestDto filterRequest) {
+        List<Plan> plans = planRepository.findPlansWithFilter(filterRequest);
+
+        return plans.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private PlanFilterResponseDto convertToResponse(Plan plan) {
+        return PlanFilterResponseDto.builder()
+                .planId(plan.getPlanId())
+                .planName(plan.getPlanName())
+                .monthlyFee(plan.getMonthlyFee())
+                .categoryName(plan.getPlanCategory() != null ? plan.getPlanCategory().getCategoryName() : null)
+                .dataAllowance(convertDataAllowance(plan))
+                .voiceCall(convertVoiceCall(plan))
+                .sharedData(convertSharedData(plan))
+                .benefits(convertBenefits(plan))
+                .build();
+    }
+
+    private PlanFilterResponseDto.DataAllowanceInfo convertDataAllowance(Plan plan) {
+        if (plan.getDataAllowances() == null) {
+            return null;
+        }
+
+        return PlanFilterResponseDto.DataAllowanceInfo.builder()
+                .dataAmount(plan.getDataAllowances().getDataAmount())
+                .dataUnit(plan.getDataAllowances().getDataUnit())
+                .dataPeriod(plan.getDataAllowances().getDataPeriod().name())
+                .build();
+    }
+
+    private PlanFilterResponseDto.VoiceCallInfo convertVoiceCall(Plan plan) {
+        if (plan.getVoiceCall() == null) {
+            return null;
+        }
+
+        return PlanFilterResponseDto.VoiceCallInfo.builder()
+                .voiceAllowance(plan.getVoiceCall().getVoiceAllowance())
+                .additionalCallAllowance(plan.getVoiceCall().getAdditionalCallAllowance())
+                .build();
+    }
+
+    private PlanFilterResponseDto.SharedDataInfo convertSharedData(Plan plan) {
+        if (plan.getSharedData() == null) {
+            return null;
+        }
+
+        return PlanFilterResponseDto.SharedDataInfo.builder()
+                .tetheringDataAmount(plan.getSharedData().getTetheringDataAmount())
+                .tetheringDataUnit(plan.getSharedData().getTetheringDataUnit())
+                .familyDataAvailable(plan.getSharedData().getFamilyDataAvailable())
+                .familyDataAmount(plan.getSharedData().getFamilyDataAmount())
+                .familyDataUnit(plan.getSharedData().getFamilyDataUnit())
+                .build();
+    }
+
+    private List<PlanFilterResponseDto.BenefitInfo> convertBenefits(Plan plan) {
+        if (plan.getPlanBenefitGroups() == null) {
+            return List.of();
+        }
+
+        return plan.getPlanBenefitGroups().stream()
+                .filter(pbg -> pbg.getBenefitGroup() != null && pbg.getBenefitGroup().getBenefitGroupBenefits() != null)
+                .flatMap(pbg -> pbg.getBenefitGroup().getBenefitGroupBenefits().stream())
+                .filter(bgb -> bgb.getBenefit() != null)
+                .map(bgb -> PlanFilterResponseDto.BenefitInfo.builder()
+                        .benefitId(bgb.getBenefit().getBenefitId())
+                        .benefitName(bgb.getBenefit().getBenefitName())
+                        .benefitType(bgb.getBenefit().getBenefitType().name())
+                        .build())
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

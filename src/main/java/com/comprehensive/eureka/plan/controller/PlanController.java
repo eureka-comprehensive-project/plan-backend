@@ -4,6 +4,8 @@ import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.base.BaseResponseDto;
+import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
+import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
 import com.comprehensive.eureka.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +55,29 @@ public class PlanController {
     public BaseResponseDto<List<PlanBenefitDto>> getPlansByPlanBenefitIds(
             @RequestBody List<Long> planBenefitIds) {
         List<PlanBenefitDto> plans = planService.getPlansByPlanBenefitIds(planBenefitIds);
+        return BaseResponseDto.success(plans);
+    }
+
+    @PostMapping("/filter")
+    public BaseResponseDto<List<PlanFilterResponseDto>> getFilteredPlans(
+            @RequestBody PlanFilterRequestDto filterRequest) {
+
+        List<PlanFilterResponseDto> plans = planService.getFilteredPlans(filterRequest);
+        return BaseResponseDto.success(plans);
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public BaseResponseDto<List<PlanFilterResponseDto>> getPlansByCategory(
+            @PathVariable Long categoryId) {
+
+        PlanFilterRequestDto filterRequest = new PlanFilterRequestDto();
+        if (categoryId == 0) {
+            filterRequest.setAllCategoriesSelected(true);
+        } else {
+            filterRequest.setCategoryIds(List.of(categoryId));
+        }
+
+        List<PlanFilterResponseDto> plans = planService.getFilteredPlans(filterRequest);
         return BaseResponseDto.success(plans);
     }
 }

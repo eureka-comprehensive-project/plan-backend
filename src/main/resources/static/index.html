@@ -13,6 +13,61 @@
         <h1>요금제 관리</h1>
         <button id="show-register-modal-btn" class="btn btn-primary">요금제 등록</button>
     </header>
+
+    <nav class="plan-tabs">
+        <button class="tab-btn active">전체</button>
+        <button class="tab-btn" data-category-id="1">프리미엄</button> <button class="tab-btn" data-category-id="2">유스</button> <button class="tab-btn" data-category-id="5">청소년</button> <button class="tab-btn" data-category-id="3">시니어</button> <button class="tab-btn" data-category-id="6">복지</button> <button class="tab-btn" data-category-id="4">너겟</button> <button class="tab-btn" data-category-id="7">다이렉트</button> </nav>
+
+    <div class="filter-controls">
+        <button id="toggle-filter-btn" class="btn btn-secondary">요금제 필터 열기</button>
+    </div>
+
+    <section id="filter-section" class="hidden">
+        <form id="filter-form">
+            <fieldset>
+                <legend>요금 범위</legend>
+                <div class="grid-container">
+                    <label><input type="checkbox" name="price" value="~5"> ~5만원대</label>
+                    <label><input type="checkbox" name="price" value="6~8"> 6~8만원대</label>
+                    <label><input type="checkbox" name="price" value="9~"> 9만원대~</label>
+                </div>
+                <hr>
+                <label><input type="checkbox" id="anyPrice"> <strong>가격 상관없음</strong></label>
+            </fieldset>
+
+            <fieldset>
+                <legend>데이터</legend>
+                <div class="grid-container">
+                    <label><input type="checkbox" name="data" value="small"> 소용량</label>
+                    <label><input type="checkbox" name="data" value="large"> 대용량/무제한</label>
+                </div>
+                <hr>
+                <label><input type="checkbox" id="anyData"> <strong>데이터 상관없음</strong></label>
+            </fieldset>
+
+            <fieldset>
+                <legend>혜택</legend>
+                <div class="grid-container">
+                    <label><input type="checkbox" name="benefit" value="1"> 넷플릭스</label>
+                    <label><input type="checkbox" name="benefit" value="2"> 디즈니+</label>
+                    <label><input type="checkbox" name="benefit" value="3"> 쿠팡플레이</label>
+                    <label><input type="checkbox" name="benefit" value="4"> 티빙</label>
+                    <label><input type="checkbox" name="benefit" value="5"> 멜론</label>
+                    <label><input type="checkbox" name="benefit" value="6"> 유튜브뮤직</label>
+                    <label><input type="checkbox" name="benefit" value="8"> 애플뮤직</label>
+                    <label><input type="checkbox" name="benefit" value="11"> 스포티파이</label>
+                </div>
+                <hr>
+                <label><input type="checkbox" id="noBenefits"> <strong>혜택 필요없음</strong></label>
+            </fieldset>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">🔍 필터 적용</button>
+                <button type="reset" id="reset-filter-btn" class="btn btn-cancel">초기화</button>
+            </div>
+        </form>
+    </section>
+
     <main id="plan-list-container">
     </main>
 </div>
@@ -78,7 +133,7 @@
                 <input type="number" id="additionalCallAllowance" name="additionalCallAllowance">
             </div>
 
-            <div id="benefit-management-section" class="form-group full-width hidden">
+            <div id="benefit-management-section" class="form-group full-width">
                 <label>혜택 관리</label>
                 <div class="benefit-buttons">
                     <button type="button" class="btn btn-secondary" data-benefit-type="PREMIUM">프리미엄 혜택 +/-</button>
