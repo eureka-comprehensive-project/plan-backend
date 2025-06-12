@@ -17,4 +17,5 @@ public interface PlanService {
     List<BenefitDto> getAllBenefitsByPlanId(Integer planId);
     List<PlanBenefitDto> getPlansByPlanBenefitIds(List<Long> planBenefitIds);
     List<PlanFilterResponseDto> getFilteredPlans(PlanFilterRequestDto filterRequest);
+    int countPlansWithFilter(PlanFilterRequestDto requestDto);
 }

@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface PlanRepositoryCustom {
     List<Plan> findPlansWithFilter(PlanFilterRequestDto filterRequest);
+    int countPlansWithFilter(PlanFilterRequestDto filterRequest);
 }

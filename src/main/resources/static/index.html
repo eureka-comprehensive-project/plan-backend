@@ -16,7 +16,14 @@
 
     <nav class="plan-tabs">
         <button class="tab-btn active">전체</button>
-        <button class="tab-btn" data-category-id="1">프리미엄</button> <button class="tab-btn" data-category-id="2">유스</button> <button class="tab-btn" data-category-id="5">청소년</button> <button class="tab-btn" data-category-id="3">시니어</button> <button class="tab-btn" data-category-id="6">복지</button> <button class="tab-btn" data-category-id="4">너겟</button> <button class="tab-btn" data-category-id="7">다이렉트</button> </nav>
+        <button class="tab-btn" data-category-id="1">프리미엄</button>
+        <button class="tab-btn" data-category-id="2">유스</button>
+        <button class="tab-btn" data-category-id="5">청소년</button>
+        <button class="tab-btn" data-category-id="3">시니어</button>
+        <button class="tab-btn" data-category-id="6">복지</button>
+        <button class="tab-btn" data-category-id="4">너겟</button>
+        <button class="tab-btn" data-category-id="7">다이렉트</button>
+    </nav>
 
     <div class="filter-controls">
         <button id="toggle-filter-btn" class="btn btn-secondary">요금제 필터 열기</button>
@@ -67,6 +74,10 @@
             </div>
         </form>
     </section>
+
+    <div class="plan-count-display">
+        <p>총 요금제: <span id="total-plan-count">0</span>개</p>
+    </div>
 
     <main id="plan-list-container">
     </main>

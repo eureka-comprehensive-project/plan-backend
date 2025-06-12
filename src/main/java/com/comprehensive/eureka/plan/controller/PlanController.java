@@ -10,7 +10,10 @@ import com.comprehensive.eureka.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/plan")
@@ -79,5 +82,11 @@ public class PlanController {
 
         List<PlanFilterResponseDto> plans = planService.getFilteredPlans(filterRequest);
         return BaseResponseDto.success(plans);
+    }
+
+    @PostMapping("/filter/count")
+    public BaseResponseDto<Integer> countPlansWithFilter(@RequestBody PlanFilterRequestDto requestDto) {
+        int count = planService.countPlansWithFilter(requestDto);
+        return BaseResponseDto.success(count);
     }
 }
