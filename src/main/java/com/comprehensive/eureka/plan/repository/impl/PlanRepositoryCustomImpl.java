@@ -33,16 +33,12 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
     public List<Plan> findPlansWithFilter(PlanFilterRequestDto filterRequest) {
         BooleanBuilder builder = new BooleanBuilder();
 
-        // 카테고리 필터
         builder.and(categoryFilter(filterRequest));
 
-        // 요금 범위 필터
         builder.and(priceRangeFilter(filterRequest));
 
-        // 데이터 옵션 필터
         builder.and(dataOptionFilter(filterRequest));
 
-        // 혜택 필터
         builder.and(benefitFilter(filterRequest));
 
         return queryFactory
@@ -61,7 +57,6 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
     }
 
     private BooleanExpression categoryFilter(PlanFilterRequestDto filterRequest) {
-        // 전체 카테고리 선택시 필터 적용하지 않음
         if (filterRequest.isAllCategoriesSelected() ||
                 filterRequest.getCategoryIds() == null ||
                 filterRequest.getCategoryIds().isEmpty()) {
@@ -72,7 +67,6 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
     }
 
     private Predicate priceRangeFilter(PlanFilterRequestDto filterRequest) {
-        // 상관없어요 선택시 필터 적용하지 않음
         if (filterRequest.isAnyPriceSelected() ||
                 filterRequest.getPriceRanges() == null ||
                 filterRequest.getPriceRanges().isEmpty()) {
@@ -99,7 +93,6 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
     }
 
     private Predicate dataOptionFilter(PlanFilterRequestDto filterRequest) {
-        // 상관없어요 선택시 필터 적용하지 않음
         if (filterRequest.isAnyDataSelected() ||
                 filterRequest.getDataOptions() == null ||
                 filterRequest.getDataOptions().isEmpty()) {
@@ -111,7 +104,6 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
         for (String option : filterRequest.getDataOptions()) {
             switch (option) {
                 case "small":
-                    // 소용량: 월간 10GB 이하 또는 일간 환산시 10GB 이하
                     dataBuilder.or(
                             plan.dataAllowances.isNull()
                                     .or(plan.dataAllowances.dataAmount.eq(0).not()
@@ -122,7 +114,6 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                     );
                     break;
                 case "large":
-                    // 대용량: 무제한(0) 또는 월간 10GB 초과 또는 일간 환산시 10GB 초과
                     dataBuilder.or(
                             plan.dataAllowances.dataAmount.eq(0)
                                     .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
@@ -138,7 +129,6 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
     }
 
     private BooleanExpression benefitFilter(PlanFilterRequestDto filterRequest) {
-        // 혜택 필요없어요 선택시 혜택이 없는 요금제만
         if (filterRequest.isNoBenefitsSelected()) {
             return queryFactory
                     .selectFrom(planBenefitGroup)
@@ -146,12 +136,10 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                     .notExists();
         }
 
-        // 혜택 필터가 없으면 모든 요금제
         if (filterRequest.getBenefitIds() == null || filterRequest.getBenefitIds().isEmpty()) {
             return null;
         }
 
-        // 선택한 혜택 중 하나라도 포함하는 요금제
         return queryFactory
                 .selectFrom(planBenefitGroup)
                 .join(planBenefitGroup.benefitGroup, benefitGroup)
