@@ -28,7 +28,7 @@ public class PlanController {
         return BaseResponseDto.success(createdPlan);
     }
 
-    @GetMapping()
+    @GetMapping("/")
     public BaseResponseDto<List<PlanDto>> getAllPlans() {
         List<PlanDto> plans = planService.getAllPlans();
         return BaseResponseDto.success(plans);
