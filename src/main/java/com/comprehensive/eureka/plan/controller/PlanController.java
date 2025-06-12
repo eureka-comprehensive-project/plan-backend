@@ -85,8 +85,8 @@ public class PlanController {
     }
 
     @PostMapping("/filter/count")
-    public ResponseEntity<Integer> countPlansWithFilter(@RequestBody PlanFilterRequestDto requestDto) {
+    public BaseResponseDto<Integer> countPlansWithFilter(@RequestBody PlanFilterRequestDto requestDto) {
         int count = planService.countPlansWithFilter(requestDto);
-        return ResponseEntity.ok(count);
+        return BaseResponseDto.success(count);
     }
 }
