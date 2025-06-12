@@ -1,5 +1,6 @@
 package com.comprehensive.eureka.plan.controller;
 
+import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.base.BaseResponseDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequest;
@@ -43,6 +44,12 @@ public class PlanController {
     public BaseResponseDto<PlanDto> getPlanById(@PathVariable Integer planId) {
         PlanDto plan = planService.getPlanById(planId);
         return BaseResponseDto.success(plan);
+    }
+
+    @GetMapping("/{planId}/benefits")
+    public BaseResponseDto<List<BenefitDto>> getBenefitsForPlan(@PathVariable Integer planId) {
+        List<BenefitDto> benefits = planService.getAllBenefitsByPlanId(planId);
+        return BaseResponseDto.success(benefits);
     }
 
     @PostMapping("/filter")
