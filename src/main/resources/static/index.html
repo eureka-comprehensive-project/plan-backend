@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>요금제 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header class="main-header">
+        <h1>요금제 관리</h1>
+        <button id="show-register-modal-btn" class="btn btn-primary">요금제 등록</button>
+    </header>
+
+    <nav class="plan-tabs">
+        <button class="tab-btn active">전체</button>
+        <button class="tab-btn" data-category-id="1">프리미엄</button> <button class="tab-btn" data-category-id="2">유스</button> <button class="tab-btn" data-category-id="5">청소년</button> <button class="tab-btn" data-category-id="3">시니어</button> <button class="tab-btn" data-category-id="6">복지</button> <button class="tab-btn" data-category-id="4">너겟</button> <button class="tab-btn" data-category-id="7">다이렉트</button> </nav>
+
+    <div class="filter-controls">
+        <button id="toggle-filter-btn" class="btn btn-secondary">요금제 필터 열기</button>
+    </div>
+
+    <section id="filter-section" class="hidden">
+        <form id="filter-form">
+            <fieldset>
+                <legend>요금 범위</legend>
+                <div class="grid-container">
+                    <label><input type="checkbox" name="price" value="~5"> ~5만원대</label>
+                    <label><input type="checkbox" name="price" value="6~8"> 6~8만원대</label>
+                    <label><input type="checkbox" name="price" value="9~"> 9만원대~</label>
+                </div>
+                <hr>
+                <label><input type="checkbox" id="anyPrice"> <strong>가격 상관없음</strong></label>
+            </fieldset>
+
+            <fieldset>
+                <legend>데이터</legend>
+                <div class="grid-container">
+                    <label><input type="checkbox" name="data" value="small"> 소용량</label>
+                    <label><input type="checkbox" name="data" value="large"> 대용량/무제한</label>
+                </div>
+                <hr>
+                <label><input type="checkbox" id="anyData"> <strong>데이터 상관없음</strong></label>
+            </fieldset>
+
+            <fieldset>
+                <legend>혜택</legend>
+                <div class="grid-container">
+                    <label><input type="checkbox" name="benefit" value="1"> 넷플릭스</label>
+                    <label><input type="checkbox" name="benefit" value="2"> 디즈니+</label>
+                    <label><input type="checkbox" name="benefit" value="3"> 쿠팡플레이</label>
+                    <label><input type="checkbox" name="benefit" value="4"> 티빙</label>
+                    <label><input type="checkbox" name="benefit" value="5"> 멜론</label>
+                    <label><input type="checkbox" name="benefit" value="6"> 유튜브뮤직</label>
+                    <label><input type="checkbox" name="benefit" value="8"> 애플뮤직</label>
+                    <label><input type="checkbox" name="benefit" value="11"> 스포티파이</label>
+                </div>
+                <hr>
+                <label><input type="checkbox" id="noBenefits"> <strong>혜택 필요없음</strong></label>
+            </fieldset>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">🔍 필터 적용</button>
+                <button type="reset" id="reset-filter-btn" class="btn btn-cancel">초기화</button>
+            </div>
+        </form>
+    </section>
+
+    <main id="plan-list-container">
+    </main>
+</div>
+
+<div id="modal-overlay" class="hidden"></div>
+
+<div id="plan-modal" class="modal hidden">
+    <h2 id="plan-modal-title">요금제 등록</h2>
+    <form id="plan-form">
+        <input type="hidden" id="planId" name="planId">
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label for="planName">요금제 이름</label>
+                <input type="text" id="planName" name="planName" required>
+            </div>
+            <div class="form-group">
+                <label for="planCategory">요금제 카테고리</label>
+                <input type="text" id="planCategory" name="planCategory" required>
+            </div>
+            <div class="form-group">
+                <label for="monthlyFee">월정액 (원)</label>
+                <input type="number" id="monthlyFee" name="monthlyFee" required>
+            </div>
+            <div class="form-group">
+                <label for="dataAllowance">기본 데이터</label>
+                <input type="number" id="dataAllowance" name="dataAllowance" required>
+                <small>0 입력 시 '무제한'</small>
+            </div>
+            <div class="form-group">
+                <label for="dataAllowanceUnit">데이터 단위</label>
+                <input type="text" id="dataAllowanceUnit" name="dataAllowanceUnit" value="GB" required>
+            </div>
+            <div class="form-group full-width">
+                <label for="dataPeriod">데이터 제공 주기</label>
+                <select id="dataPeriod" name="dataPeriod" required>
+                    <option value="MONTH" selected>월(MONTH)</option>
+                    <option value="DAY">일(DAY)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tetheringDataAmount">테더링 데이터</label>
+                <input type="number" id="tetheringDataAmount" name="tetheringDataAmount">
+            </div>
+            <div class="form-group">
+                <label for="tetheringDataUnit">테더링 단위</label>
+                <input type="text" id="tetheringDataUnit" name="tetheringDataUnit" value="GB">
+            </div>
+            <div class="form-group">
+                <label for="familyDataAmount">가족 공유 데이터</label>
+                <input type="number" id="familyDataAmount" name="familyDataAmount">
+            </div>
+            <div class="form-group">
+                <label for="familyDataUnit">가족 공유 단위</label>
+                <input type="text" id="familyDataUnit" name="familyDataUnit" value="GB">
+            </div>
+            <div class="form-group">
+                <label for="voiceAllowance">음성 통화</label>
+                <input type="number" id="voiceAllowance" name="voiceAllowance">
+                <small>0 입력 시 '무제한'</small>
+            </div>
+            <div class="form-group">
+                <label for="additionalCallAllowance">부가 통화 (분)</label>
+                <input type="number" id="additionalCallAllowance" name="additionalCallAllowance">
+            </div>
+
+            <div id="benefit-management-section" class="form-group full-width">
+                <label>혜택 관리</label>
+                <div class="benefit-buttons">
+                    <button type="button" class="btn btn-secondary" data-benefit-type="PREMIUM">프리미엄 혜택 +/-</button>
+                    <button type="button" class="btn btn-secondary" data-benefit-type="MEDIA">미디어 혜택 +/-</button>
+                </div>
+            </div>
+            <input type="hidden" id="benefitIdList" name="benefitIdList">
+        </div>
+        <div class="modal-actions">
+            <button type="submit" id="submit-plan-btn" class="btn btn-primary">등록하기</button>
+            <button type="button" id="cancel-plan-btn" class="btn btn-cancel">취소</button>
+        </div>
+    </form>
+</div>
+
+<div id="benefit-modal" class="modal hidden">
+    <h2 id="benefit-modal-title">혜택 관리</h2>
+    <div id="benefit-list" class="benefit-list-container">
+    </div>
+    <div class="modal-actions">
+        <button type="button" id="apply-benefit-changes-btn" class="btn btn-primary">혜택 수정 완료</button>
+        <button type="button" id="cancel-benefit-btn" class="btn btn-cancel">취소</button>
+    </div>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
