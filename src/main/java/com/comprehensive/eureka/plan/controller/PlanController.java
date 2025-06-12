@@ -1,6 +1,7 @@
 package com.comprehensive.eureka.plan.controller;
 
 import com.comprehensive.eureka.plan.dto.BenefitDto;
+import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.base.BaseResponseDto;
 import com.comprehensive.eureka.plan.service.PlanService;
@@ -46,5 +47,12 @@ public class PlanController {
     public BaseResponseDto<List<BenefitDto>> getBenefitsForPlan(@PathVariable Integer planId) {
         List<BenefitDto> benefits = planService.getAllBenefitsByPlanId(planId);
         return BaseResponseDto.success(benefits);
+    }
+
+    @PostMapping("/plan-benefit")
+    public BaseResponseDto<List<PlanBenefitDto>> getPlansByPlanBenefitIds(
+            @RequestBody List<Long> planBenefitIds) {
+        List<PlanBenefitDto> plans = planService.getPlansByPlanBenefitIds(planBenefitIds);
+        return BaseResponseDto.success(plans);
     }
 }
