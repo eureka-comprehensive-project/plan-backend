@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PlanFilterRequest {
+public class PlanFilterRequestDto {
 
     private List<Long> categoryIds;
     private boolean allCategoriesSelected;

@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PlanResponseDto {
+public class PlanFilterResponseDto {
 
     private Integer planId;
     private String planName;

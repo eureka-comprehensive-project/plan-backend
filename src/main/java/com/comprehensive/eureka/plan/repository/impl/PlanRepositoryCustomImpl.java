@@ -25,7 +25,7 @@ import static com.comprehensive.eureka.plan.entity.QVoiceCall.voiceCall;
 
 @Repository
 @RequiredArgsConstructor
-public class PlanRepositoryImpl implements PlanRepositoryCustom {
+public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 

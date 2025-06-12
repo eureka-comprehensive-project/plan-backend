@@ -3,9 +3,8 @@ package com.comprehensive.eureka.plan.controller;
 import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.base.BaseResponseDto;
-import com.comprehensive.eureka.plan.dto.request.PlanFilterRequest;
-import com.comprehensive.eureka.plan.dto.response.PlanResponseDto;
-import com.comprehensive.eureka.plan.service.PlanFilterService;
+import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
+import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
 import com.comprehensive.eureka.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,7 @@ import java.util.List;
 public class PlanController {
 
     private final PlanService planService;
-    private final PlanFilterService planFilterService;
+    private final PlanService planFilterService;
 
     @PostMapping
     public BaseResponseDto<PlanDto> registerPlan(@RequestBody PlanDto planDto) {
@@ -53,25 +52,25 @@ public class PlanController {
     }
 
     @PostMapping("/filter")
-    public ResponseEntity<List<PlanResponseDto>> getFilteredPlans(
-            @RequestBody PlanFilterRequest filterRequest) {
+    public BaseResponseDto<List<PlanFilterResponseDto>> getFilteredPlans(
+            @RequestBody PlanFilterRequestDto filterRequest) {
 
-        List<PlanResponseDto> plans = planFilterService.getFilteredPlans(filterRequest);
-        return ResponseEntity.ok(plans);
+        List<PlanFilterResponseDto> plans = planFilterService.getFilteredPlans(filterRequest);
+        return BaseResponseDto.success(plans);
     }
 
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<PlanResponseDto>> getPlansByCategory(
+    public BaseResponseDto<List<PlanFilterResponseDto>> getPlansByCategory(
             @PathVariable Long categoryId) {
 
-        PlanFilterRequest filterRequest = new PlanFilterRequest();
-        if (categoryId == 0) { // 전체 카테고리
+        PlanFilterRequestDto filterRequest = new PlanFilterRequestDto();
+        if (categoryId == 0) {
             filterRequest.setAllCategoriesSelected(true);
         } else {
             filterRequest.setCategoryIds(List.of(categoryId));
         }
 
-        List<PlanResponseDto> plans = planFilterService.getFilteredPlans(filterRequest);
-        return ResponseEntity.ok(plans);
+        List<PlanFilterResponseDto> plans = planFilterService.getFilteredPlans(filterRequest);
+        return BaseResponseDto.success(plans);
     }
 }
