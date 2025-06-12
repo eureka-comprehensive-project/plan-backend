@@ -1,6 +1,7 @@
 package com.comprehensive.eureka.plan.controller;
 
 import com.comprehensive.eureka.plan.dto.BenefitDto;
+import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.base.BaseResponseDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
@@ -17,7 +18,6 @@ import java.util.List;
 public class PlanController {
 
     private final PlanService planService;
-    private final PlanService planFilterService;
 
     @PostMapping
     public BaseResponseDto<PlanDto> registerPlan(@RequestBody PlanDto planDto) {
@@ -51,11 +51,18 @@ public class PlanController {
         return BaseResponseDto.success(benefits);
     }
 
+    @PostMapping("/plan-benefit")
+    public BaseResponseDto<List<PlanBenefitDto>> getPlansByPlanBenefitIds(
+            @RequestBody List<Long> planBenefitIds) {
+        List<PlanBenefitDto> plans = planService.getPlansByPlanBenefitIds(planBenefitIds);
+        return BaseResponseDto.success(plans);
+    }
+
     @PostMapping("/filter")
     public BaseResponseDto<List<PlanFilterResponseDto>> getFilteredPlans(
             @RequestBody PlanFilterRequestDto filterRequest) {
 
-        List<PlanFilterResponseDto> plans = planFilterService.getFilteredPlans(filterRequest);
+        List<PlanFilterResponseDto> plans = planService.getFilteredPlans(filterRequest);
         return BaseResponseDto.success(plans);
     }
 
@@ -70,7 +77,7 @@ public class PlanController {
             filterRequest.setCategoryIds(List.of(categoryId));
         }
 
-        List<PlanFilterResponseDto> plans = planFilterService.getFilteredPlans(filterRequest);
+        List<PlanFilterResponseDto> plans = planService.getFilteredPlans(filterRequest);
         return BaseResponseDto.success(plans);
     }
 }
