@@ -342,6 +342,7 @@ public class PlanServiceImpl implements PlanService {
 
     private PlanDto convertToDto(Plan plan, List<Long> originalBenefitIds) {
         return PlanDto.builder()
+                .planId(plan.getPlanId())
                 .planName(plan.getPlanName())
                 .planCategory(plan.getPlanCategory().getCategoryName())
                 .dataAllowance(plan.getDataAllowances().getDataAmount())
@@ -432,5 +433,9 @@ public class PlanServiceImpl implements PlanService {
                         .build())
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    public int countPlansWithFilter(PlanFilterRequestDto requestDto) {
+        return planRepository.countPlansWithFilter(requestDto);
     }
 }
