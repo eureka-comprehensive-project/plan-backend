@@ -1,6 +1,6 @@
 package com.comprehensive.eureka.plan.repository.impl;
 
-import com.comprehensive.eureka.plan.dto.request.PlanFilterRequest;
+import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
 import com.comprehensive.eureka.plan.entity.Plan;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.repository.PlanRepositoryCustom;
@@ -30,7 +30,7 @@ public class PlanRepositoryImpl implements PlanRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Plan> findPlansWithFilter(PlanFilterRequest filterRequest) {
+    public List<Plan> findPlansWithFilter(PlanFilterRequestDto filterRequest) {
         BooleanBuilder builder = new BooleanBuilder();
 
         // 카테고리 필터
@@ -60,7 +60,7 @@ public class PlanRepositoryImpl implements PlanRepositoryCustom {
                 .fetch();
     }
 
-    private BooleanExpression categoryFilter(PlanFilterRequest filterRequest) {
+    private BooleanExpression categoryFilter(PlanFilterRequestDto filterRequest) {
         // 전체 카테고리 선택시 필터 적용하지 않음
         if (filterRequest.isAllCategoriesSelected() ||
                 filterRequest.getCategoryIds() == null ||
@@ -71,7 +71,7 @@ public class PlanRepositoryImpl implements PlanRepositoryCustom {
         return plan.planCategory.categoryId.in(filterRequest.getCategoryIds());
     }
 
-    private Predicate priceRangeFilter(PlanFilterRequest filterRequest) {
+    private Predicate priceRangeFilter(PlanFilterRequestDto filterRequest) {
         // 상관없어요 선택시 필터 적용하지 않음
         if (filterRequest.isAnyPriceSelected() ||
                 filterRequest.getPriceRanges() == null ||
@@ -98,7 +98,7 @@ public class PlanRepositoryImpl implements PlanRepositoryCustom {
         return priceBuilder;
     }
 
-    private Predicate dataOptionFilter(PlanFilterRequest filterRequest) {
+    private Predicate dataOptionFilter(PlanFilterRequestDto filterRequest) {
         // 상관없어요 선택시 필터 적용하지 않음
         if (filterRequest.isAnyDataSelected() ||
                 filterRequest.getDataOptions() == null ||
@@ -137,7 +137,7 @@ public class PlanRepositoryImpl implements PlanRepositoryCustom {
         return dataBuilder;
     }
 
-    private BooleanExpression benefitFilter(PlanFilterRequest filterRequest) {
+    private BooleanExpression benefitFilter(PlanFilterRequestDto filterRequest) {
         // 혜택 필요없어요 선택시 혜택이 없는 요금제만
         if (filterRequest.isNoBenefitsSelected()) {
             return queryFactory
