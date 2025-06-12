@@ -1,6 +1,7 @@
 package com.comprehensive.eureka.plan.service.impl;
 
 import com.comprehensive.eureka.plan.dto.BenefitDto;
+import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.entity.Benefit;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
@@ -194,6 +195,23 @@ public class PlanServiceImpl implements PlanService {
                         .benefitId(benefit.getBenefitId())
                         .benefitName(benefit.getBenefitName())
                         .benefitType(benefit.getBenefitType())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PlanBenefitDto> getPlansByPlanBenefitIds(List<Long> planBenefitIds) {
+        if (planBenefitIds == null || planBenefitIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        log.info("PlanBenefit ID 로 요금제 조회 요청: {}", planBenefitIds);
+
+        List<PlanBenefitGroup> results = planBenefitGroupRepository.findAllByIdWithPlan(planBenefitIds);
+
+        return results.stream()
+                .map(pbg -> PlanBenefitDto.builder()
+                        .planBenefitId(pbg.getPlanBenefitId())
+                        .planId(pbg.getPlan().getPlanId())
                         .build())
                 .collect(Collectors.toList());
     }
