@@ -18,4 +18,5 @@ public interface PlanService {
     List<PlanBenefitDto> getPlansByPlanBenefitIds(List<Long> planBenefitIds);
     List<PlanFilterResponseDto> getFilteredPlans(PlanFilterRequestDto filterRequest);
     int countPlansWithFilter(PlanFilterRequestDto requestDto);
+    boolean checkPlanHasBenefitGroup(Integer planId, Long benefitGroupId);
 }
