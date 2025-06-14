@@ -25,4 +25,6 @@ public interface PlanBenefitGroupRepository extends JpaRepository<PlanBenefitGro
             "JOIN FETCH pbg.plan " +
             "WHERE pbg.planBenefitId IN :planBenefitIds")
     List<PlanBenefitGroup> findAllByIdWithPlan(@Param("planBenefitIds") List<Long> planBenefitIds);
+
+    boolean existsByPlan_PlanIdAndBenefitGroup_BenefitGroupId(Integer planId, Long benefitGroupId);
 }

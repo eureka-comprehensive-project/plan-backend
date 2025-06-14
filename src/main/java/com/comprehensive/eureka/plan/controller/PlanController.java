@@ -89,4 +89,13 @@ public class PlanController {
         int count = planService.countPlansWithFilter(requestDto);
         return BaseResponseDto.success(count);
     }
+
+    @GetMapping("/{planId}/benefit-group/{benefitGroupId}/exists")
+    public BaseResponseDto<Boolean> checkPlanHasBenefitGroup(
+            @PathVariable Integer planId,
+            @PathVariable Long benefitGroupId) {
+
+        boolean hasBenefitGroup = planService.checkPlanHasBenefitGroup(planId, benefitGroupId);
+        return BaseResponseDto.success(hasBenefitGroup);
+    }
 }
