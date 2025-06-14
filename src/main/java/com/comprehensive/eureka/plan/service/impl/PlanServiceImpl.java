@@ -213,6 +213,13 @@ public class PlanServiceImpl implements PlanService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public boolean checkPlanHasBenefitGroup(Integer planId, Long benefitGroupId) {
+        log.info("요금제(ID: {})가 혜택 그룹(ID: {})을 포함하는지 확인 요청", planId, benefitGroupId);
+
+        return planBenefitGroupRepository.existsByPlan_PlanIdAndBenefitGroup_BenefitGroupId(planId, benefitGroupId);
+    }
+
     private void updatePlanBenefits(Plan plan, List<Long> newBenefitIdList) {
         Set<Long> currentBenefitIds = planBenefitGroupRepository.findAllByPlan(plan).stream()
                 .flatMap(pbg -> pbg.getBenefitGroup().getBenefitGroupBenefits().stream())
