@@ -23,7 +23,7 @@ public class BenefitController {
         return BaseResponseDto.success(benefits);
     }
 
-    @GetMapping("/")
+    @GetMapping
     public BaseResponseDto<List<BenefitDto>> getAllBenefits() {
         List<BenefitDto> benefits = benefitService.getAllBenefits();
         return BaseResponseDto.success(benefits);
