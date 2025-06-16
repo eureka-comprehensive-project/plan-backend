@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/plan/benefit")
+@RequestMapping("/benefit")
 public class BenefitController {
 
     private final BenefitService benefitService;
@@ -23,7 +23,7 @@ public class BenefitController {
         return BaseResponseDto.success(benefits);
     }
 
-    @GetMapping("/all")
+    @GetMapping
     public BaseResponseDto<List<BenefitDto>> getAllBenefits() {
         List<BenefitDto> benefits = benefitService.getAllBenefits();
         return BaseResponseDto.success(benefits);
