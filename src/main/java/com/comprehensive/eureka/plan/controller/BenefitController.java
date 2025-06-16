@@ -22,4 +22,10 @@ public class BenefitController {
         List<BenefitDto> benefits = benefitService.getAllBenefitsByType(benefitType);
         return BaseResponseDto.success(benefits);
     }
+
+    @GetMapping("/all")
+    public BaseResponseDto<List<BenefitDto>> getAllBenefits() {
+        List<BenefitDto> benefits = benefitService.getAllBenefits();
+        return BaseResponseDto.success(benefits);
+    }
 }
