@@ -7,7 +7,11 @@ import com.comprehensive.eureka.plan.exception.ErrorCode;
 import com.comprehensive.eureka.plan.exception.PlanException;
 import com.comprehensive.eureka.plan.repository.BenefitRepository;
 import com.comprehensive.eureka.plan.service.BenefitService;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,5 +41,22 @@ public class BenefitServiceImpl implements BenefitService {
             log.warn("유효하지 않은 혜택 타입으로 조회 시도: {}", benefitType);
             throw new PlanException(ErrorCode.BENEFIT_NOT_FOUND);
         }
+    }
+
+    @Override
+    public List<BenefitDto> getAllBenefits() {
+        List<Benefit> benefits = benefitRepository.findAll();
+
+        return benefits.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    private BenefitDto convertToDto(Benefit benefit) {
+        BenefitDto dto = new BenefitDto();
+        dto.setBenefitId(benefit.getBenefitId());
+        dto.setBenefitName(benefit.getBenefitName());
+        dto.setBenefitType(benefit.getBenefitType());
+        return dto;
     }
 }
