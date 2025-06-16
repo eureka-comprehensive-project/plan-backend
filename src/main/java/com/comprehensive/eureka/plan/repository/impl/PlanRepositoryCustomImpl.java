@@ -106,7 +106,7 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                 case "small":
                     dataBuilder.or(
                             plan.dataAllowances.isNull()
-                                    .or(plan.dataAllowances.dataAmount.eq(0).not()
+                                    .or(plan.dataAllowances.dataAmount.eq(99999).not()
                                             .and(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
                                                     .and(plan.dataAllowances.dataAmount.loe(10)))
                                             .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
@@ -115,7 +115,7 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                     break;
                 case "large":
                     dataBuilder.or(
-                            plan.dataAllowances.dataAmount.eq(0)
+                            plan.dataAllowances.dataAmount.eq(99999)
                                     .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
                                             .and(plan.dataAllowances.dataAmount.gt(10)))
                                     .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
