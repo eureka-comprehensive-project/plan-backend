@@ -15,6 +15,7 @@ import com.comprehensive.eureka.plan.entity.PlanCategory;
 import com.comprehensive.eureka.plan.entity.SharedData;
 import com.comprehensive.eureka.plan.entity.VoiceCall;
 import com.comprehensive.eureka.plan.entity.enums.BenefitType;
+import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.exception.ErrorCode;
 import com.comprehensive.eureka.plan.exception.PlanException;
 import com.comprehensive.eureka.plan.repository.*;
@@ -466,5 +467,42 @@ public class PlanServiceImpl implements PlanService {
     public int countPlansWithFilter(PlanFilterRequestDto requestDto) {
         log.info("countPlansWithFilter 메서드를 시작합니다. 필터 요청: {}", requestDto);
         return planRepository.countPlansWithFilter(requestDto);
+    }
+
+    @Override
+    @Transactional
+    public List<PlanDto> findPlansByPlanNameContaining(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getAllPlans();
+        }
+
+        List<Plan> plans = planRepository.findByPlanNameContainingIgnoreCase(searchTerm);
+
+        return plans.stream()
+                .map(this::convertToDtoWithBenefits)
+                .collect(Collectors.toList());
+    }
+
+    private PlanDto convertToDtoWithBenefits(Plan plan) {
+        return PlanDto.builder()
+                .planId(plan.getPlanId())
+                .planName(plan.getPlanName())
+                .planCategory(plan.getPlanCategory() != null ? plan.getPlanCategory().getCategoryName() : null)
+                .monthlyFee(plan.getMonthlyFee())
+                .dataAllowance(plan.getDataAllowances() != null ? plan.getDataAllowances().getDataAmount() : null)
+                .dataAllowanceUnit(plan.getDataAllowances() != null ? plan.getDataAllowances().getDataUnit() : null)
+                .dataPeriod(plan.getDataAllowances() != null && plan.getDataAllowances().getDataPeriod() != null ? DataPeriod.valueOf(plan.getDataAllowances().getDataPeriod().name()) : null)
+                .tetheringDataAmount(plan.getSharedData() != null ? plan.getSharedData().getTetheringDataAmount() : null)
+                .tetheringDataUnit(plan.getSharedData() != null ? plan.getSharedData().getTetheringDataUnit() : null)
+                .familyDataAmount(plan.getSharedData() != null ? plan.getSharedData().getFamilyDataAmount() : null)
+                .familyDataUnit(plan.getSharedData() != null ? plan.getSharedData().getFamilyDataUnit() : null)
+                .voiceAllowance(plan.getVoiceCall() != null ? plan.getVoiceCall().getVoiceAllowance() : null)
+                .additionalCallAllowance(plan.getVoiceCall() != null ? plan.getVoiceCall().getAdditionalCallAllowance() : null)
+                .benefitIdList(plan.getPlanBenefitGroups().stream()
+                        .flatMap(pbg -> pbg.getBenefitGroup().getBenefitGroupBenefits().stream())
+                        .map(bgb -> bgb.getBenefit().getBenefitId())
+                        .distinct()
+                        .collect(Collectors.toList()))
+                .build();
     }
 }
