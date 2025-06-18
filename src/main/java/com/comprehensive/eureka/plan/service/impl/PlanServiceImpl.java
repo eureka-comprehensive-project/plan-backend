@@ -283,14 +283,18 @@ public class PlanServiceImpl implements PlanService {
         for (Benefit benefit : allBenefits) {
             requiredCombinationIds.add(Set.of(benefit.getBenefitId()));
         }
+
         Map<BenefitType, List<Benefit>> benefitsByType = allBenefits.stream()
                 .collect(Collectors.groupingBy(Benefit::getBenefitType));
-        List<BenefitType> types = new ArrayList<>(benefitsByType.keySet());
 
-        for (int i = 0; i < types.size(); i++) {
-            for (int j = i + 1; j < types.size(); j++) {
-                List<Benefit> list1 = benefitsByType.get(types.get(i));
-                List<Benefit> list2 = benefitsByType.get(types.get(j));
+        List<BenefitType> combinableTypes = benefitsByType.keySet().stream()
+                .filter(type -> type != BenefitType.BASIC)
+                .toList();
+
+        for (int i = 0; i < combinableTypes.size(); i++) {
+            for (int j = i + 1; j < combinableTypes.size(); j++) {
+                List<Benefit> list1 = benefitsByType.get(combinableTypes.get(i));
+                List<Benefit> list2 = benefitsByType.get(combinableTypes.get(j));
                 for (Benefit benefit1 : list1) {
                     for (Benefit benefit2 : list2) {
                         requiredCombinationIds.add(Set.of(benefit1.getBenefitId(), benefit2.getBenefitId()));
