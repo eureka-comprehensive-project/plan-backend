@@ -19,4 +19,5 @@ public interface PlanService {
     List<PlanFilterResponseDto> getFilteredPlans(PlanFilterRequestDto filterRequest);
     int countPlansWithFilter(PlanFilterRequestDto requestDto);
     boolean checkPlanHasBenefitGroup(Integer planId, Long benefitGroupId);
+    List<PlanDto> findPlansByPlanNameContaining(String searchTerm);
 }

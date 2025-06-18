@@ -37,4 +37,16 @@ public interface PlanRepository extends JpaRepository<Plan, Integer>, PlanReposi
             "LEFT JOIN FETCH bgb.benefit b " +
             "WHERE p.planId = :planId")
     Optional<Plan> findWithBenefitsById(@Param("planId") Integer planId);
+
+    @Query("SELECT p FROM Plan p " +
+            "LEFT JOIN FETCH p.planCategory pc " +
+            "LEFT JOIN FETCH p.dataAllowances da " +
+            "LEFT JOIN FETCH p.voiceCall vc " +
+            "LEFT JOIN FETCH p.sharedData sd " +
+            "LEFT JOIN FETCH p.planBenefitGroups pbg " +
+            "LEFT JOIN FETCH pbg.benefitGroup bg " +
+            "LEFT JOIN FETCH bg.benefitGroupBenefits bgb " +
+            "LEFT JOIN FETCH bgb.benefit b " +
+            "WHERE LOWER(p.planName) LIKE LOWER(CONCAT('%', :planName, '%'))")
+    List<Plan> findByPlanNameContainingIgnoreCase(@Param("planName") String planName);
 }

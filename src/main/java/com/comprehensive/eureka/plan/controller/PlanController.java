@@ -98,4 +98,11 @@ public class PlanController {
         boolean hasBenefitGroup = planService.checkPlanHasBenefitGroup(planId, benefitGroupId);
         return BaseResponseDto.success(hasBenefitGroup);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<BaseResponseDto<List<PlanDto>>> searchPlansByPlanName(
+            @RequestParam("planName") String planName) {
+        List<PlanDto> plans = planService.findPlansByPlanNameContaining(planName);
+        return ResponseEntity.ok(BaseResponseDto.success(plans));
+    }
 }
