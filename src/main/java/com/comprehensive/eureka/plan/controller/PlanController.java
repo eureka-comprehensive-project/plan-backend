@@ -22,7 +22,7 @@ public class PlanController {
 
     private final PlanService planService;
 
-    @PostMapping
+    @PostMapping("/register")
     public BaseResponseDto<PlanDto> registerPlan(@RequestBody PlanDto planDto) {
         PlanDto createdPlan = planService.createPlan(planDto);
         return BaseResponseDto.success(createdPlan);
