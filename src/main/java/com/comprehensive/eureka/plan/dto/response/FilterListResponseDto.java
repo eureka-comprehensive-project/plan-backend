@@ -2,6 +2,7 @@ package com.comprehensive.eureka.plan.dto.response;
 
 import com.comprehensive.eureka.plan.entity.Plan;
 import com.comprehensive.eureka.plan.entity.PlanBenefitGroup;
+import com.comprehensive.eureka.plan.entity.BenefitGroupBenefit;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import lombok.Setter;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList; // ArrayList를 import 합니다.
 
 @Getter
 @Setter
@@ -38,7 +40,7 @@ public class FilterListResponseDto {
         dto.setPlanName(plan.getPlanName());
 
         if (plan.getPlanCategory() != null) {
-            dto.setPlanCategory(plan.getPlanCategory().getCategoryName()); // Assuming PlanCategory has a getName() method
+            dto.setPlanCategory(plan.getPlanCategory().getCategoryName());
         }
 
         if (plan.getDataAllowances() != null) {
@@ -63,7 +65,17 @@ public class FilterListResponseDto {
 
         if (plan.getPlanBenefitGroups() != null) {
             dto.setBenefitIdList(plan.getPlanBenefitGroups().stream()
-                    .map(PlanBenefitGroup::getPlanBenefitId) // Assuming PlanBenefitGroup has a getBenefitId() method that returns a Long
+                    .flatMap(planBenefitGroup -> {
+                        if (planBenefitGroup.getBenefitGroup() != null &&
+                                planBenefitGroup.getBenefitGroup().getBenefitGroupBenefits() != null) {
+                            return planBenefitGroup.getBenefitGroup().getBenefitGroupBenefits().stream();
+                        }
+                        return java.util.stream.Stream.empty();
+                    })
+                    .filter(benefitGroupBenefit -> benefitGroupBenefit.getBenefit() != null)
+                    .map(benefitGroupBenefit -> benefitGroupBenefit.getBenefit().getBenefitId())
+                    .collect(Collectors.toSet())
+                    .stream()
                     .collect(Collectors.toList()));
         }
 
