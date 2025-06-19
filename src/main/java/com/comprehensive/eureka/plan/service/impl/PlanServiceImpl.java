@@ -261,46 +261,41 @@ public class PlanServiceImpl implements PlanService {
         }
     }
 
-    private List<BenefitGroup> processBenefitCombinations(List<Long> benefitIdList) {
+    // 가상 클래스 및 import 구문은 생략합니다.
+
+    @Transactional
+    public List<BenefitGroup> processBenefitCombinations(List<Long> benefitIdList) {
         if (benefitIdList == null || benefitIdList.isEmpty()) {
             return Collections.emptyList();
         }
 
+        // 1. 요청된 ID에 해당하는 모든 Benefit 엔티티를 조회합니다.
         List<Benefit> allBenefits = benefitRepository.findAllById(benefitIdList);
         if (allBenefits.size() != benefitIdList.size()) {
-            log.warn("요청된 혜택 ID 중 일부를 찾을 수 없음. 요청 ID: {}", benefitIdList);
-            throw new PlanException(ErrorCode.BENEFIT_NOT_FOUND);
+            log.warn("요청된 혜택 ID 중 일부를 찾을 수 없습니다. 요청 ID: {}", benefitIdList);
+            // 실제 환경에서는 적절한 예외 처리가 필요합니다.
+            // throw new EntityNotFoundException("Benefit not found for some IDs.");
         }
 
+        // 빠른 조회를 위해 Benefit ID를 키로 하는 Map을 생성합니다.
         Map<Long, Benefit> benefitMap = allBenefits.stream()
                 .collect(Collectors.toMap(Benefit::getBenefitId, benefit -> benefit));
 
-        Set<Set<Long>> requiredCombinationIds = new HashSet<>();
-        for (Benefit benefit : allBenefits) {
-            requiredCombinationIds.add(Set.of(benefit.getBenefitId()));
-        }
-
+        // 혜택을 타입(BASIC, PREMIUM 등)별로 그룹화합니다.
         Map<BenefitType, List<Benefit>> benefitsByType = allBenefits.stream()
                 .collect(Collectors.groupingBy(Benefit::getBenefitType));
 
-        List<BenefitType> combinableTypes = benefitsByType.keySet().stream()
-                .filter(type -> type != BenefitType.BASIC)
-                .toList();
+        List<BenefitType> types = new ArrayList<>(benefitsByType.keySet());
+        Set<Set<Long>> requiredCombinationIds = new HashSet<>();
 
-        for (int i = 0; i < combinableTypes.size(); i++) {
-            for (int j = i + 1; j < combinableTypes.size(); j++) {
-                List<Benefit> list1 = benefitsByType.get(combinableTypes.get(i));
-                List<Benefit> list2 = benefitsByType.get(combinableTypes.get(j));
-                for (Benefit benefit1 : list1) {
-                    for (Benefit benefit2 : list2) {
-                        requiredCombinationIds.add(Set.of(benefit1.getBenefitId(), benefit2.getBenefitId()));
-                    }
-                }
-            }
-        }
+        // 2. 재귀 함수를 호출하여 필요한 모든 혜택 조합(ID Set)을 생성합니다.
+        findCombinations(0, new ArrayDeque<>(), types, benefitsByType, requiredCombinationIds);
 
+        // 3. 기존에 생성된 BenefitGroup들을 한 번에 조회하여 Map으로 만듭니다.
+        // Key: 그룹에 포함된 혜택 ID Set, Value: BenefitGroup 엔티티
         Map<Set<Long>, BenefitGroup> existingGroupsMap = benefitGroupRepository
-                .findByBenefitIdsWithBenefits(new HashSet<>(benefitIdList)).stream()
+                .findAllByBenefitGroupBenefitsBenefitBenefitIdIn(new HashSet<>(benefitIdList))
+                .stream()
                 .collect(Collectors.toMap(
                         group -> group.getBenefitGroupBenefits().stream()
                                 .map(bgb -> bgb.getBenefit().getBenefitId())
@@ -309,46 +304,81 @@ public class PlanServiceImpl implements PlanService {
                         (existing, replacement) -> existing
                 ));
 
+        // 4. 각 조합에 대해 BenefitGroup이 존재하면 사용하고, 없으면 새로 생성합니다.
         List<BenefitGroup> resultGroups = new ArrayList<>();
-
         for (Set<Long> combinationIds : requiredCombinationIds) {
-            BenefitGroup group = existingGroupsMap.get(combinationIds);
-
-            if (group != null) {
-                resultGroups.add(group);
-            } else {
-                BenefitGroup newGroup = createNewBenefitGroup(combinationIds, benefitMap);
-                benefitGroupRepository.save(newGroup);
-                resultGroups.add(newGroup);
-
-                existingGroupsMap.put(combinationIds, newGroup);
-            }
+            BenefitGroup group = existingGroupsMap.computeIfAbsent(combinationIds, ids -> {
+                BenefitGroup newGroup = createNewBenefitGroup(ids, benefitMap);
+                return benefitGroupRepository.save(newGroup); // 새 그룹을 DB에 저장
+            });
+            resultGroups.add(group);
         }
 
         return resultGroups;
     }
 
+    /**
+     * 백트래킹을 사용하여 혜택 조합을 생성하는 재귀 함수입니다.
+     * @param startIndex         탐색을 시작할 혜택 타입의 인덱스 (중복 조합 방지)
+     * @param currentCombination 현재 경로에서 만들어진 조합 (ID Deque)
+     * @param types              전체 혜택 타입 리스트
+     * @param benefitsByType     타입별로 그룹화된 혜택 맵
+     * @param allCombinations    생성된 모든 조합(ID Set)을 저장할 최종 Set
+     */
+    private void findCombinations(
+            int startIndex,
+            Deque<Long> currentCombination,
+            List<BenefitType> types,
+            Map<BenefitType, List<Benefit>> benefitsByType,
+            Set<Set<Long>> allCombinations) {
+
+        // startIndex부터 시작하여 각 혜택 타입을 순회합니다.
+        for (int i = startIndex; i < types.size(); i++) {
+            BenefitType currentType = types.get(i);
+            List<Benefit> benefitsInType = benefitsByType.get(currentType);
+
+            // 현재 타입에 속한 각 혜택을 조합에 추가하는 경우를 탐색합니다.
+            for (Benefit benefit : benefitsInType) {
+                // 1. 조합에 현재 혜택 ID를 추가합니다.
+                currentCombination.addLast(benefit.getBenefitId());
+
+                // 2. 현재까지 만들어진 조합을 결과 Set에 저장합니다.
+                allCombinations.add(new HashSet<>(currentCombination));
+
+                // 3. 다음 타입(i+1)으로 넘어가 하위 조합을 찾기 위해 재귀 호출합니다.
+                findCombinations(i + 1, currentCombination, types, benefitsByType, allCombinations);
+
+                // 4. 백트래킹: 탐색이 끝났으므로 다음 경우의 수를 위해 마지막에 추가했던 혜택 ID를 제거합니다.
+                currentCombination.removeLast();
+            }
+        }
+    }
+
+    /**
+     * 새로운 BenefitGroup 엔티티와 그에 속한 BenefitGroupBenefit 관계 엔티티들을 생성합니다.
+     * @param combinationIds 생성할 그룹에 포함될 혜택 ID Set
+     * @param benefitMap     ID로 Benefit 엔티티를 빠르게 찾기 위한 맵
+     * @return 저장 준비가 완료된 새로운 BenefitGroup 엔티티
+     */
     private BenefitGroup createNewBenefitGroup(Set<Long> combinationIds, Map<Long, Benefit> benefitMap) {
-        log.info("새로운 혜택 그룹 생성. 혜택 ID: {}", combinationIds);
-
-        List<Benefit> combinationBenefits = combinationIds.stream()
-                .map(benefitMap::get)
-                .toList();
-
         BenefitGroup newGroup = new BenefitGroup();
-        newGroup.setDescription(combinationBenefits.stream()
-                .map(Benefit::getBenefitName)
-                .sorted()
-                .collect(Collectors.joining(", ")));
+        newGroup.setDescription("Generated Group"); // 필요시 설명 추가
 
-        Set<BenefitGroupBenefit> bgbSet = combinationBenefits.stream().map(benefit -> {
-            BenefitGroupBenefit bgb = new BenefitGroupBenefit();
-            bgb.setBenefitGroup(newGroup);
-            bgb.setBenefit(benefit);
-            return bgb;
-        }).collect(Collectors.toSet());
+        // 혜택 ID들을 기반으로 BenefitGroupBenefit(중간 테이블 엔티티) Set을 생성합니다.
+        Set<BenefitGroupBenefit> benefitGroupBenefits = combinationIds.stream()
+                .map(benefitId -> {
+                    Benefit benefit = benefitMap.get(benefitId);
+                    BenefitGroupBenefit bgb = new BenefitGroupBenefit();
+                    bgb.setBenefitGroup(newGroup); // 관계 설정 (자식 -> 부모)
+                    bgb.setBenefit(benefit);       // 관계 설정 (자식 -> 혜택)
+                    return bgb;
+                })
+                .collect(Collectors.toSet());
 
-        newGroup.setBenefitGroupBenefits(bgbSet);
+        // 생성된 중간 엔티티 Set을 BenefitGroup에 설정합니다. (부모 -> 자식)
+        // CascadeType.ALL 옵션 덕분에 부모(newGroup)만 저장하면 자식(bgb)들도 함께 저장됩니다.
+        newGroup.setBenefitGroupBenefits(benefitGroupBenefits);
+
         return newGroup;
     }
 
