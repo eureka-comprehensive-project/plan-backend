@@ -6,6 +6,7 @@ import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.base.BaseResponseDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
 import com.comprehensive.eureka.plan.dto.request.PlanSearchRequestDto;
+import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
 import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
 import com.comprehensive.eureka.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
@@ -104,6 +105,14 @@ public class PlanController {
     public BaseResponseDto<List<PlanDto>> searchPlansByPlanName(
             @RequestBody PlanSearchRequestDto requestDto) {
         List<PlanDto> plans = planService.findPlansByPlanNameContaining(requestDto.getPlanName());
+        return BaseResponseDto.success(plans);
+    }
+
+    @PostMapping("/filter/list")
+    public BaseResponseDto<List<FilterListResponseDto>> getFilteredList(
+            @RequestBody PlanFilterRequestDto filterRequest) {
+
+        List<FilterListResponseDto> plans = planService.getFilteredList(filterRequest);
         return BaseResponseDto.success(plans);
     }
 }

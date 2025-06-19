@@ -1,6 +1,7 @@
 package com.comprehensive.eureka.plan.repository.impl;
 
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
+import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
 import com.comprehensive.eureka.plan.entity.Plan;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.repository.PlanRepositoryCustom;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.comprehensive.eureka.plan.entity.QBenefit.benefit;
 import static com.comprehensive.eureka.plan.entity.QBenefitGroup.benefitGroup;
@@ -174,6 +176,37 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                 .fetchOne();
 
         return count != null ? count.intValue() : 0;
+    }
+
+    @Override
+    public List<FilterListResponseDto> getFilteredList(PlanFilterRequestDto filterRequest) {
+        BooleanBuilder builder = new BooleanBuilder();
+
+        builder.and(categoryFilter(filterRequest));
+
+        builder.and(priceRangeFilter(filterRequest));
+
+        builder.and(dataOptionFilter(filterRequest));
+
+        builder.and(benefitFilter(filterRequest));
+
+        List<Plan> fetch = queryFactory
+                .selectFrom(plan)
+                .distinct()
+                .leftJoin(plan.planCategory, planCategory).fetchJoin()
+                .leftJoin(plan.dataAllowances, dataAllowances).fetchJoin()
+                .leftJoin(plan.voiceCall, voiceCall).fetchJoin()
+                .leftJoin(plan.sharedData, sharedData).fetchJoin()
+                .leftJoin(plan.planBenefitGroups, planBenefitGroup).fetchJoin()
+                .leftJoin(planBenefitGroup.benefitGroup, benefitGroup).fetchJoin()
+                .leftJoin(benefitGroup.benefitGroupBenefits, benefitGroupBenefit).fetchJoin()
+                .leftJoin(benefitGroupBenefit.benefit, benefit).fetchJoin()
+                .where(builder)
+                .fetch();
+
+        return fetch.stream()
+                .map(FilterListResponseDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
 }

@@ -4,6 +4,7 @@ import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
+import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
 import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
 import com.comprehensive.eureka.plan.entity.Benefit;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
@@ -504,5 +505,11 @@ public class PlanServiceImpl implements PlanService {
                         .distinct()
                         .collect(Collectors.toList()))
                 .build();
+    }
+
+    @Override
+    public List<FilterListResponseDto> getFilteredList(PlanFilterRequestDto filterRequest) {
+        log.info("getFilteredList 메서드를 시작합니다. 필터 요청: {}", filterRequest);
+        return planRepository.getFilteredList(filterRequest);
     }
 }
