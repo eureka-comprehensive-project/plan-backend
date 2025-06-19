@@ -4,18 +4,17 @@ import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.base.BaseResponseDto;
+import com.comprehensive.eureka.plan.dto.request.GetBenefitGroupsRequestDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
 import com.comprehensive.eureka.plan.dto.request.PlanSearchRequestDto;
 import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
+import com.comprehensive.eureka.plan.dto.response.GetBenefitGroupResponseDto;
 import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
 import com.comprehensive.eureka.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/plan")
@@ -114,5 +113,14 @@ public class PlanController {
 
         List<FilterListResponseDto> plans = planService.getFilteredList(filterRequest);
         return BaseResponseDto.success(plans);
+    }
+
+    @PostMapping("/benefit-group")
+    public BaseResponseDto<GetBenefitGroupResponseDto> getBenefitGroups(@RequestBody GetBenefitGroupsRequestDto requestDto) {
+        Long benefitGroupsByPlanIds = planService.getBenefitGroupsByPlanIds(requestDto.getBenefitIds());
+        GetBenefitGroupResponseDto getBenefitGroupResponseDto = GetBenefitGroupResponseDto.builder()
+                .id(benefitGroupsByPlanIds)
+                .build();
+        return BaseResponseDto.success(getBenefitGroupResponseDto);
     }
 }

@@ -6,30 +6,24 @@ import com.comprehensive.eureka.plan.dto.PlanDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
 import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
 import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
-import com.comprehensive.eureka.plan.entity.Benefit;
-import com.comprehensive.eureka.plan.entity.BenefitGroup;
-import com.comprehensive.eureka.plan.entity.BenefitGroupBenefit;
-import com.comprehensive.eureka.plan.entity.DataAllowances;
-import com.comprehensive.eureka.plan.entity.Plan;
-import com.comprehensive.eureka.plan.entity.PlanBenefitGroup;
-import com.comprehensive.eureka.plan.entity.PlanCategory;
-import com.comprehensive.eureka.plan.entity.SharedData;
-import com.comprehensive.eureka.plan.entity.VoiceCall;
+import com.comprehensive.eureka.plan.entity.*;
 import com.comprehensive.eureka.plan.entity.enums.BenefitType;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.exception.ErrorCode;
 import com.comprehensive.eureka.plan.exception.PlanException;
-import com.comprehensive.eureka.plan.repository.*;
+import com.comprehensive.eureka.plan.repository.BenefitGroupRepository;
+import com.comprehensive.eureka.plan.repository.BenefitRepository;
+import com.comprehensive.eureka.plan.repository.PlanBenefitGroupRepository;
+import com.comprehensive.eureka.plan.repository.PlanRepository;
 import com.comprehensive.eureka.plan.service.PlanService;
 import com.comprehensive.eureka.plan.service.util.DuplicateChecker;
 import jakarta.transaction.Transactional;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -70,7 +64,7 @@ public class PlanServiceImpl implements PlanService {
         log.info("요금제 조회 요청: ID {}", planId);
 
         Plan plan = planRepository.findWithBenefitsById(planId)
-                .orElseThrow( () -> new PlanException(ErrorCode.PLAN_NOT_FOUND));
+                .orElseThrow(() -> new PlanException(ErrorCode.PLAN_NOT_FOUND));
 
         List<Long> benefitIds = plan.getPlanBenefitGroups().stream()
                 .flatMap(pbg -> pbg.getBenefitGroup().getBenefitGroupBenefits().stream())
@@ -511,5 +505,12 @@ public class PlanServiceImpl implements PlanService {
     public List<FilterListResponseDto> getFilteredList(PlanFilterRequestDto filterRequest) {
         log.info("getFilteredList 메서드를 시작합니다. 필터 요청: {}", filterRequest);
         return planRepository.getFilteredList(filterRequest);
+    }
+
+    @Override
+    public Long getBenefitGroupsByPlanIds(List<Long> benefitIds) {
+        return planRepository.findBenefitGroupIdsByAllBenefitIds(benefitIds)
+                .map(BenefitGroup::getBenefitGroupId)
+                .orElse(null);
     }
 }
