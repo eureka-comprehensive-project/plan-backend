@@ -1,9 +1,11 @@
 package com.comprehensive.eureka.plan.repository.impl;
 
+import com.comprehensive.eureka.plan.dto.request.GetPlanBenefitGroupIdRequestDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
 import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
 import com.comprehensive.eureka.plan.entity.Plan;
+import com.comprehensive.eureka.plan.entity.PlanBenefitGroup;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.repository.PlanRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
@@ -32,6 +34,7 @@ import static com.comprehensive.eureka.plan.entity.QVoiceCall.voiceCall;
 public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
+    private final JPAQueryFactory jpaQueryFactory;
 
     @Override
     public List<Plan> findPlansWithFilter(PlanFilterRequestDto filterRequest) {
@@ -226,6 +229,17 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                 .fetchFirst();
 
         return Optional.ofNullable(result);
+    }
+
+    @Override
+    public PlanBenefitGroup getPlanBenefitGroupId(GetPlanBenefitGroupIdRequestDto requestDto) {
+        return jpaQueryFactory.select(planBenefitGroup)
+                .from(planBenefitGroup)
+                .where(
+                        planBenefitGroup.plan.planId.eq(requestDto.getPlanId()),
+                        planBenefitGroup.benefitGroup.benefitGroupId.eq(requestDto.getBenefitGroupId())
+                )
+                .fetchOne();
     }
 
 }

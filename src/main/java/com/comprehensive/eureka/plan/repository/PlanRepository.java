@@ -1,13 +1,14 @@
 package com.comprehensive.eureka.plan.repository;
 
+import com.comprehensive.eureka.plan.dto.request.GetPlanBenefitGroupIdRequestDto;
 import com.comprehensive.eureka.plan.entity.Plan;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PlanRepository extends JpaRepository<Plan, Integer>, PlanRepositoryCustom {
@@ -49,4 +50,5 @@ public interface PlanRepository extends JpaRepository<Plan, Integer>, PlanReposi
             "LEFT JOIN FETCH bgb.benefit b " +
             "WHERE LOWER(p.planName) LIKE LOWER(CONCAT('%', :planName, '%'))")
     List<Plan> findByPlanNameContainingIgnoreCase(@Param("planName") String planName);
+
 }

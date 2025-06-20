@@ -3,6 +3,7 @@ package com.comprehensive.eureka.plan.service;
 import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
+import com.comprehensive.eureka.plan.dto.request.GetPlanBenefitGroupIdRequestDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
 import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
 import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
@@ -34,4 +35,6 @@ public interface PlanService {
     List<FilterListResponseDto> getFilteredList(PlanFilterRequestDto filterRequest);
 
     Long getBenefitGroupsByPlanIds(List<Long> benefitIds);
+
+    Long getPlanBenefitGroupId(GetPlanBenefitGroupIdRequestDto requestDto);
 }

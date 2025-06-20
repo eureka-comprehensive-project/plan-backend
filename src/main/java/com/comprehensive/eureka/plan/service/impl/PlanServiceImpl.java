@@ -3,6 +3,7 @@ package com.comprehensive.eureka.plan.service.impl;
 import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanBenefitDto;
 import com.comprehensive.eureka.plan.dto.PlanDto;
+import com.comprehensive.eureka.plan.dto.request.GetPlanBenefitGroupIdRequestDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
 import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
 import com.comprehensive.eureka.plan.dto.response.PlanFilterResponseDto;
@@ -542,5 +543,11 @@ public class PlanServiceImpl implements PlanService {
         return planRepository.findBenefitGroupIdsByAllBenefitIds(benefitIds)
                 .map(BenefitGroup::getBenefitGroupId)
                 .orElse(null);
+    }
+
+    @Override
+    public Long getPlanBenefitGroupId(GetPlanBenefitGroupIdRequestDto requestDto) {
+        PlanBenefitGroup planBenefitGroup = planRepository.getPlanBenefitGroupId(requestDto);
+        return planBenefitGroup.getPlanBenefitId();
     }
 }
