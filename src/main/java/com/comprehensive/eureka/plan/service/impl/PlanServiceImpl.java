@@ -434,10 +434,15 @@ public class PlanServiceImpl implements PlanService {
             return null;
         }
 
+        String dataPeriodName = null;
+        if(plan.getDataAllowances().getDataPeriod() != null) {
+            dataPeriodName = plan.getDataAllowances().getDataPeriod().name();
+        }
+
         return PlanFilterResponseDto.DataAllowanceInfo.builder()
                 .dataAmount(plan.getDataAllowances().getDataAmount())
                 .dataUnit(plan.getDataAllowances().getDataUnit())
-                .dataPeriod(plan.getDataAllowances().getDataPeriod().name())
+                .dataPeriod(dataPeriodName)
                 .build();
     }
 
