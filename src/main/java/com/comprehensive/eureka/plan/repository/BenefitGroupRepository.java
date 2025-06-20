@@ -1,6 +1,7 @@
 package com.comprehensive.eureka.plan.repository;
 
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,7 @@ public interface BenefitGroupRepository extends JpaRepository<BenefitGroup, Long
             "  WHERE bgb.benefitGroup = bg AND bgb.benefit.benefitId NOT IN :benefitIdList" +
             ")")
     List<BenefitGroup> findBenefitGroupsByExactBenefits(@Param("benefitIdList") List<Long> benefitIdList);
+
+    @Query("SELECT DISTINCT bg FROM BenefitGroup bg JOIN bg.benefitGroupBenefits bgb WHERE bgb.benefit.benefitId IN :benefitIds")
+    List<BenefitGroup> findAllByBenefitGroupBenefitsBenefitBenefitIdIn(@Param("benefitIds") Set<Long> benefitIds);
 }

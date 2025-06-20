@@ -1,8 +1,11 @@
 package com.comprehensive.eureka.plan.repository.impl;
 
+import com.comprehensive.eureka.plan.dto.request.GetPlanBenefitGroupIdRequestDto;
 import com.comprehensive.eureka.plan.dto.request.PlanFilterRequestDto;
 import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
+import com.comprehensive.eureka.plan.entity.BenefitGroup;
 import com.comprehensive.eureka.plan.entity.Plan;
+import com.comprehensive.eureka.plan.entity.PlanBenefitGroup;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.repository.PlanRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
@@ -13,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.comprehensive.eureka.plan.entity.QBenefit.benefit;
@@ -30,6 +34,7 @@ import static com.comprehensive.eureka.plan.entity.QVoiceCall.voiceCall;
 public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
+    private final JPAQueryFactory jpaQueryFactory;
 
     @Override
     public List<Plan> findPlansWithFilter(PlanFilterRequestDto filterRequest) {
@@ -207,6 +212,34 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
         return fetch.stream()
                 .map(FilterListResponseDto::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<BenefitGroup> findBenefitGroupIdsByAllBenefitIds(List<Long> benefitIds) {
+        if (benefitIds == null || benefitIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        BenefitGroup result = queryFactory
+                .select(benefitGroupBenefit.benefitGroup)
+                .from(benefitGroupBenefit)
+                .where(benefitGroupBenefit.benefit.benefitId.in(benefitIds))
+                .groupBy(benefitGroupBenefit.benefitGroup)
+                .having(benefitGroupBenefit.benefit.benefitId.countDistinct().eq((long) benefitIds.size()))
+                .fetchFirst();
+
+        return Optional.ofNullable(result);
+    }
+
+    @Override
+    public PlanBenefitGroup getPlanBenefitGroupId(GetPlanBenefitGroupIdRequestDto requestDto) {
+        return jpaQueryFactory.select(planBenefitGroup)
+                .from(planBenefitGroup)
+                .where(
+                        planBenefitGroup.plan.planId.eq(requestDto.getPlanId()),
+                        planBenefitGroup.benefitGroup.benefitGroupId.eq(requestDto.getBenefitGroupId())
+                )
+                .fetchOne();
     }
 
 }
