@@ -21,7 +21,7 @@ public class DataAllowances {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "data_allowance_id")
-    private Integer dataAllowanceId;
+    private Long dataAllowanceId;
 
     private Integer dataAmount;
 
