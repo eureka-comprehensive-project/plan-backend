@@ -20,7 +20,7 @@ public class SharedData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "shared_data_id")
-    private Integer sharedDataId;
+    private Long sharedDataId;
 
     private Integer tetheringDataAmount;
 
