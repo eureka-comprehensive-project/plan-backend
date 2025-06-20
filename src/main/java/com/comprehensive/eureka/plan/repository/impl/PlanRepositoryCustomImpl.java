@@ -6,6 +6,7 @@ import com.comprehensive.eureka.plan.dto.response.FilterListResponseDto;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
 import com.comprehensive.eureka.plan.entity.Plan;
 import com.comprehensive.eureka.plan.entity.PlanBenefitGroup;
+import com.comprehensive.eureka.plan.entity.QBenefitGroupBenefit;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import com.comprehensive.eureka.plan.repository.PlanRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
@@ -220,12 +221,31 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
             return Optional.empty();
         }
 
+        QBenefitGroupBenefit benefitGroupBenefit = QBenefitGroupBenefit.benefitGroupBenefit;
+        long benefitIdsSize = benefitIds.size();
+
+        // 1. (서브쿼리) Benefit의 총 개수가 benefitIds의 크기와 정확히 일치하는 benefitGroup의 ID를 찾습니다.
+        List<Long> exactMatchGroupIds = queryFactory
+                .select(benefitGroupBenefit.benefitGroup.benefitGroupId)
+                .from(benefitGroupBenefit)
+                .groupBy(benefitGroupBenefit.benefitGroup.benefitGroupId)
+                .having(benefitGroupBenefit.benefit.count().eq(benefitIdsSize))
+                .fetch();
+
+        if (exactMatchGroupIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // 2. (메인쿼리) 서브쿼리 결과를 사용하여 정확한 BenefitGroup을 찾습니다.
         BenefitGroup result = queryFactory
                 .select(benefitGroupBenefit.benefitGroup)
                 .from(benefitGroupBenefit)
-                .where(benefitGroupBenefit.benefit.benefitId.in(benefitIds))
+                .where(benefitGroupBenefit.benefit.benefitId.in(benefitIds)
+                        // 2-2. 그리고 서브쿼리에서 찾은 "총 개수가 일치하는" 그룹 ID 목록에 포함되어야 함
+                        .and(benefitGroupBenefit.benefitGroup.benefitGroupId.in(exactMatchGroupIds)))
                 .groupBy(benefitGroupBenefit.benefitGroup)
-                .having(benefitGroupBenefit.benefit.benefitId.countDistinct().eq((long) benefitIds.size()))
+                // 2-3. 포함된 benefit의 개수가 일치하는지 다시 확인 (신뢰성 확보)
+                .having(benefitGroupBenefit.benefit.benefitId.countDistinct().eq(benefitIdsSize))
                 .fetchFirst();
 
         return Optional.ofNullable(result);
