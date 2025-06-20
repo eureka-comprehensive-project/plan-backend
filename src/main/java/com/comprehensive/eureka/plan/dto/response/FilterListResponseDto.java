@@ -36,7 +36,7 @@ public class FilterListResponseDto {
 
     public static FilterListResponseDto fromEntity(Plan plan) {
         FilterListResponseDto dto = new FilterListResponseDto();
-        dto.setPlanId(plan.getPlanId());
+        dto.setPlanId(Math.toIntExact(plan.getPlanId()));
         dto.setPlanName(plan.getPlanName());
 
         if (plan.getPlanCategory() != null) {

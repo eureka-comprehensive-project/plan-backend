@@ -205,7 +205,7 @@ public class PlanServiceImpl implements PlanService {
         return results.stream()
                 .map(pbg -> PlanBenefitDto.builder()
                         .planBenefitId(pbg.getPlanBenefitId())
-                        .planId(pbg.getPlan().getPlanId())
+                        .planId(Math.toIntExact(pbg.getPlan().getPlanId()))
                         .build())
                 .collect(Collectors.toList());
     }
@@ -385,7 +385,7 @@ public class PlanServiceImpl implements PlanService {
 
     private PlanDto convertToDto(Plan plan, List<Long> originalBenefitIds) {
         return PlanDto.builder()
-                .planId(plan.getPlanId())
+                .planId(Math.toIntExact(plan.getPlanId()))
                 .planName(plan.getPlanName())
                 .planCategory(plan.getPlanCategory().getCategoryName())
                 .dataAllowance(plan.getDataAllowances().getDataAmount())
@@ -416,7 +416,7 @@ public class PlanServiceImpl implements PlanService {
     private PlanFilterResponseDto convertToResponse(Plan plan) {
         log.debug("Plan 객체 (ID: {})를 PlanFilterResponseDto로 변환합니다.", plan.getPlanId());
         return PlanFilterResponseDto.builder()
-                .planId(plan.getPlanId())
+                .planId(Math.toIntExact(plan.getPlanId()))
                 .planName(plan.getPlanName())
                 .monthlyFee(plan.getMonthlyFee())
                 .categoryName(plan.getPlanCategory() != null ? plan.getPlanCategory().getCategoryName() : null)
@@ -516,7 +516,7 @@ public class PlanServiceImpl implements PlanService {
 
     private PlanDto convertToDtoWithBenefits(Plan plan) {
         return PlanDto.builder()
-                .planId(plan.getPlanId())
+                .planId(Math.toIntExact(plan.getPlanId()))
                 .planName(plan.getPlanName())
                 .planCategory(plan.getPlanCategory() != null ? plan.getPlanCategory().getCategoryName() : null)
                 .monthlyFee(plan.getMonthlyFee())

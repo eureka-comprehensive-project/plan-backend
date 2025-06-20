@@ -236,7 +236,7 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
         return jpaQueryFactory.select(planBenefitGroup)
                 .from(planBenefitGroup)
                 .where(
-                        planBenefitGroup.plan.planId.eq(requestDto.getPlanId()),
+                        planBenefitGroup.plan.planId.eq(Long.valueOf(requestDto.getPlanId())),
                         planBenefitGroup.benefitGroup.benefitGroupId.eq(requestDto.getBenefitGroupId())
                 )
                 .fetchOne();
