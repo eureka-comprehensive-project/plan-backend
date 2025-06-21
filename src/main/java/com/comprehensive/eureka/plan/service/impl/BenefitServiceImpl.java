@@ -4,15 +4,18 @@ import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.request.BenefitRequestDto;
 import com.comprehensive.eureka.plan.entity.Benefit;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
+import com.comprehensive.eureka.plan.entity.PlanBenefitGroup;
 import com.comprehensive.eureka.plan.entity.enums.BenefitType;
 import com.comprehensive.eureka.plan.exception.ErrorCode;
 import com.comprehensive.eureka.plan.exception.PlanException;
 import com.comprehensive.eureka.plan.repository.BenefitGroupRepository;
 import com.comprehensive.eureka.plan.repository.BenefitRepository;
+import com.comprehensive.eureka.plan.repository.PlanBenefitGroupRepository;
 import com.comprehensive.eureka.plan.service.BenefitService;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import java.util.stream.Stream;
@@ -28,6 +31,7 @@ public class BenefitServiceImpl implements BenefitService {
 
     private final BenefitRepository benefitRepository;
     private final BenefitGroupRepository benefitGroupRepository;
+    private final PlanBenefitGroupRepository planBenefitGroupRepository;
 
     @Override
     public List<BenefitDto> getAllBenefitsByType(String benefitType) {
@@ -98,5 +102,32 @@ public class BenefitServiceImpl implements BenefitService {
         dto.setBenefitName(benefit.getBenefitName());
         dto.setBenefitType(benefit.getBenefitType());
         return dto;
+    }
+
+    @Override
+    public Set<BenefitDto> getBenefitsByPlanBenefitGroupId(Long planBenefitGroupId) {
+        log.info("요금제_혜택모음 ID로 혜택 조회 시작. PlanBenefitGroupId: {}", planBenefitGroupId);
+
+        PlanBenefitGroup planBenefitGroup = planBenefitGroupRepository.findPlanBenefitGroupWithBenefits(planBenefitGroupId)
+                .orElseThrow(() -> {
+                    String errorMessage = "요금제_혜택모음ID [" + planBenefitGroupId + "]에 해당하는 혜택 모음을 찾을 수 없습니다.";
+                    log.error(errorMessage);
+                    return new IllegalArgumentException(errorMessage);
+                });
+
+        Set<BenefitDto> benefits = planBenefitGroup.getBenefitGroup().getBenefitGroupBenefits().stream()
+                .map(benefitGroupBenefit -> {
+                    Benefit benefit = benefitGroupBenefit.getBenefit();
+                    log.debug("혜택 변환 중: ID={}, 이름={}, 타입={}", benefit.getBenefitId(), benefit.getBenefitName(), benefit.getBenefitType());
+                    return BenefitDto.builder()
+                            .benefitId(benefit.getBenefitId())
+                            .benefitName(benefit.getBenefitName())
+                            .benefitType(benefit.getBenefitType())
+                            .build();
+                })
+                .collect(Collectors.toSet());
+
+        log.info("요금제_혜택모음ID [{}]에 대한 혜택 조회 완료. 총 {}개의 혜택 반환.", planBenefitGroupId, benefits.size());
+        return benefits;
     }
 }
