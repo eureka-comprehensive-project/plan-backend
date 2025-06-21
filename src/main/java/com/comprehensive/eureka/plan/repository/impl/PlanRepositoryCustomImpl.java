@@ -37,6 +37,10 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
     private final JPAQueryFactory queryFactory;
     private final JPAQueryFactory jpaQueryFactory;
 
+    private static final int UNLIMITED_DATA_AMOUNT = 99999;
+    private static final int SMALL_DATA_THRESHOLD_GB = 10;
+    private static final int LARGE_DATA_THRESHOLD_MB = SMALL_DATA_THRESHOLD_GB * 1000;
+
     @Override
     public List<Plan> findPlansWithFilter(PlanFilterRequestDto filterRequest) {
         BooleanBuilder builder = new BooleanBuilder();
@@ -85,13 +89,13 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
         for (String range : filterRequest.getPriceRanges()) {
             switch (range) {
-                case "~5":
+                case "~5만원대":
                     priceBuilder.or(plan.monthlyFee.loe(50000));
                     break;
-                case "6~8":
+                case "6~8만원대":
                     priceBuilder.or(plan.monthlyFee.between(60000, 80000));
                     break;
-                case "9~":
+                case "9만원대~":
                     priceBuilder.or(plan.monthlyFee.goe(90000));
                     break;
             }
@@ -100,7 +104,7 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
         return priceBuilder;
     }
 
-    private Predicate dataOptionFilter(PlanFilterRequestDto filterRequest) {
+    public Predicate dataOptionFilter(PlanFilterRequestDto filterRequest) {
         if (filterRequest.isAnyDataSelected() ||
                 filterRequest.getDataOptions() == null ||
                 filterRequest.getDataOptions().isEmpty()) {
@@ -111,24 +115,45 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
         for (String option : filterRequest.getDataOptions()) {
             switch (option) {
-                case "small":
+                case "소용량":
                     dataBuilder.or(
                             plan.dataAllowances.isNull()
-                                    .or(plan.dataAllowances.dataAmount.eq(0).not()
-                                            .and(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
-                                                    .and(plan.dataAllowances.dataAmount.loe(10)))
-                                            .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                    .and(plan.dataAllowances.dataAmount.multiply(30).loe(10))))
+                                    .or(plan.dataAllowances.dataAmount.eq(0)
+                                            .or(plan.dataAllowances.dataUnit.eq("MB")
+                                                    .and(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                            .and(plan.dataAllowances.dataAmount.loe(LARGE_DATA_THRESHOLD_MB)))
+                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                            .and(plan.dataAllowances.dataAmount.multiply(30).loe(LARGE_DATA_THRESHOLD_MB))))
+                                            .or(plan.dataAllowances.dataUnit.eq("GB")
+                                                    .and(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                            .and(plan.dataAllowances.dataAmount.loe(SMALL_DATA_THRESHOLD_GB)))
+                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                            .and(plan.dataAllowances.dataAmount.multiply(30).loe(SMALL_DATA_THRESHOLD_GB))))
+                                    )
                     );
                     break;
-                case "large":
+                case "대용량":
                     dataBuilder.or(
-                            plan.dataAllowances.dataAmount.eq(0)
-                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
-                                            .and(plan.dataAllowances.dataAmount.gt(10)))
-                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                            .and(plan.dataAllowances.dataAmount.multiply(30).gt(10)))
+                            plan.dataAllowances.dataAmount.ne(UNLIMITED_DATA_AMOUNT)
+                                    .and(plan.dataAllowances.isNotNull())
+                                    .and(
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                    .and(plan.dataAllowances.dataUnit.eq("GB"))
+                                                    .and(plan.dataAllowances.dataAmount.gt(SMALL_DATA_THRESHOLD_GB))
+                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                            .and(plan.dataAllowances.dataUnit.eq("GB"))
+                                                            .and(plan.dataAllowances.dataAmount.multiply(30).gt(SMALL_DATA_THRESHOLD_GB)))
+                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                            .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                            .and(plan.dataAllowances.dataAmount.gt(LARGE_DATA_THRESHOLD_MB)))
+                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                            .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                            .and(plan.dataAllowances.dataAmount.multiply(30).gt(LARGE_DATA_THRESHOLD_MB)))
+                                    )
                     );
+                    break;
+                case "unlimited":
+                    dataBuilder.or(plan.dataAllowances.dataAmount.eq(UNLIMITED_DATA_AMOUNT));
                     break;
             }
         }
