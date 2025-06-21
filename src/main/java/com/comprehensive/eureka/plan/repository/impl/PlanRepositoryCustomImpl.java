@@ -132,6 +132,7 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                                     )
                     );
                     break;
+
                 case "대용량":
                     dataBuilder.or(
                             plan.dataAllowances.dataAmount.ne(UNLIMITED_DATA_AMOUNT)
@@ -152,6 +153,7 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                                     )
                     );
                     break;
+
                 case "unlimited":
                     dataBuilder.or(plan.dataAllowances.dataAmount.eq(UNLIMITED_DATA_AMOUNT));
                     break;
