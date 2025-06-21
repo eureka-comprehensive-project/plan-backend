@@ -138,7 +138,7 @@ public class PlanServiceImpl implements PlanService {
                 .orElseThrow(() -> new PlanException(ErrorCode.PLAN_NOT_FOUND));
 
         planRepository.findByPlanName(planDto.getPlanName()).ifPresent(plan -> {
-            if (!plan.getPlanId().equals(planId)) {
+            if (!plan.getPlanId().equals(planId.longValue())) {
                 log.warn("이미 존재하는 요금제 이름으로 수정 시도: {}", planDto.getPlanName());
                 throw new PlanException(ErrorCode.PLAN_ALREADY_EXISTS);
             }
