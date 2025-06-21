@@ -89,13 +89,13 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
         for (String range : filterRequest.getPriceRanges()) {
             switch (range) {
-                case "~5만원대":
+                case "~5":
                     priceBuilder.or(plan.monthlyFee.loe(50000));
                     break;
-                case "6~8만원대":
+                case "6~8":
                     priceBuilder.or(plan.monthlyFee.between(60000, 80000));
                     break;
-                case "9만원대~":
+                case "9~":
                     priceBuilder.or(plan.monthlyFee.goe(90000));
                     break;
             }
@@ -115,25 +115,35 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
         for (String option : filterRequest.getDataOptions()) {
             switch (option) {
-                case "소용량":
+                case "small":
                     dataBuilder.or(
                             plan.dataAllowances.isNull()
-                                    .or(plan.dataAllowances.dataAmount.eq(0)
-                                            .or(plan.dataAllowances.dataUnit.eq("MB")
-                                                    .and(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
-                                                            .and(plan.dataAllowances.dataAmount.loe(LARGE_DATA_THRESHOLD_MB)))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                            .and(plan.dataAllowances.dataAmount.multiply(30).loe(LARGE_DATA_THRESHOLD_MB))))
-                                            .or(plan.dataAllowances.dataUnit.eq("GB")
-                                                    .and(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
-                                                            .and(plan.dataAllowances.dataAmount.loe(SMALL_DATA_THRESHOLD_GB)))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                            .and(plan.dataAllowances.dataAmount.multiply(30).loe(SMALL_DATA_THRESHOLD_GB))))
+                                    .or(plan.dataAllowances.dataAmount.eq(0))
+                                    .or(
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                    .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                    .and(plan.dataAllowances.dataAmount.loe(LARGE_DATA_THRESHOLD_MB))
+                                    )
+                                    .or(
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                    .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                    .and(plan.dataAllowances.dataAmount.multiply(30).loe(LARGE_DATA_THRESHOLD_MB))
+                                    )
+                                    .or(
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                    .and(plan.dataAllowances.dataUnit.eq("GB"))
+                                                    .and(plan.dataAllowances.dataAmount.loe(SMALL_DATA_THRESHOLD_GB))
+                                    )
+                                    .or(
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                    .and(plan.dataAllowances.dataUnit.eq("GB"))
+                                                    .and(plan.dataAllowances.dataAmount.multiply(30).loe(SMALL_DATA_THRESHOLD_GB))
+                                                    .and(plan.dataAllowances.dataAmount.lt(5))
                                     )
                     );
                     break;
 
-                case "대용량":
+                case "large":
                     dataBuilder.or(
                             plan.dataAllowances.dataAmount.ne(UNLIMITED_DATA_AMOUNT)
                                     .and(plan.dataAllowances.isNotNull())
@@ -141,15 +151,21 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
                                             plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
                                                     .and(plan.dataAllowances.dataUnit.eq("GB"))
                                                     .and(plan.dataAllowances.dataAmount.gt(SMALL_DATA_THRESHOLD_GB))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                            .and(plan.dataAllowances.dataUnit.eq("GB"))
-                                                            .and(plan.dataAllowances.dataAmount.multiply(30).gt(SMALL_DATA_THRESHOLD_GB)))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
-                                                            .and(plan.dataAllowances.dataUnit.eq("MB"))
-                                                            .and(plan.dataAllowances.dataAmount.gt(LARGE_DATA_THRESHOLD_MB)))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                            .and(plan.dataAllowances.dataUnit.eq("MB"))
-                                                            .and(plan.dataAllowances.dataAmount.multiply(30).gt(LARGE_DATA_THRESHOLD_MB)))
+                                                    .or(
+                                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                                    .and(plan.dataAllowances.dataUnit.eq("GB"))
+                                                                    .and(plan.dataAllowances.dataAmount.multiply(30).gt(SMALL_DATA_THRESHOLD_GB))
+                                                    )
+                                                    .or(
+                                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                                    .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                                    .and(plan.dataAllowances.dataAmount.gt(LARGE_DATA_THRESHOLD_MB))
+                                                    )
+                                                    .or(
+                                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                                    .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                                    .and(plan.dataAllowances.dataAmount.multiply(30).gt(LARGE_DATA_THRESHOLD_MB))
+                                                    )
                                     )
                     );
                     break;
