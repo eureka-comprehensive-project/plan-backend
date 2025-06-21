@@ -6,6 +6,8 @@ import java.util.Collection;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -27,4 +29,11 @@ public interface PlanBenefitGroupRepository extends JpaRepository<PlanBenefitGro
     List<PlanBenefitGroup> findAllByIdWithPlan(@Param("planBenefitIds") List<Long> planBenefitIds);
 
     boolean existsByPlan_PlanIdAndBenefitGroup_BenefitGroupId(Integer planId, Long benefitGroupId);
+
+    @Query("SELECT pbg FROM PlanBenefitGroup pbg " +
+            "LEFT JOIN FETCH pbg.benefitGroup bg " +
+            "LEFT JOIN FETCH bg.benefitGroupBenefits bgb " +
+            "LEFT JOIN FETCH bgb.benefit b " +
+            "WHERE pbg.planBenefitId = :planBenefitId")
+    Optional<PlanBenefitGroup> findPlanBenefitGroupWithBenefits(@Param("planBenefitId") Long planBenefitId);
 }
