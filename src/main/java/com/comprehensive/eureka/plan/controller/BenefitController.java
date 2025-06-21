@@ -5,6 +5,8 @@ import com.comprehensive.eureka.plan.dto.base.BaseResponseDto;
 import com.comprehensive.eureka.plan.dto.request.BenefitRequestDto;
 import com.comprehensive.eureka.plan.service.BenefitService;
 import java.util.List;
+import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,5 +38,11 @@ public class BenefitController {
     public BaseResponseDto<Long> findBenefitGroupIdByBenefits(@RequestBody BenefitRequestDto benefitRequestDto) {
         Long benefitGroupId = benefitService.findBenefitGroupIdByBenefits(benefitRequestDto);
         return BaseResponseDto.success(benefitGroupId);
+    }
+
+    @GetMapping("/{planBenefitGroupId}/benefits")
+    public BaseResponseDto<Set<BenefitDto>> getBenefitsByPlanBenefitGroupId(@PathVariable Long planBenefitGroupId) {
+        Set<BenefitDto> benefits = benefitService.getBenefitsByPlanBenefitGroupId(planBenefitGroupId);
+        return BaseResponseDto.success(benefits);
     }
 }
