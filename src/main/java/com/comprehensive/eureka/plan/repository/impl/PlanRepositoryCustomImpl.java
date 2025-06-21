@@ -89,13 +89,13 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
         for (String range : filterRequest.getPriceRanges()) {
             switch (range) {
-                case "~5만원대":
+                case "~5":
                     priceBuilder.or(plan.monthlyFee.loe(50000));
                     break;
-                case "6~8만원대":
+                case "6~8":
                     priceBuilder.or(plan.monthlyFee.between(60000, 80000));
                     break;
-                case "9만원대~":
+                case "9~":
                     priceBuilder.or(plan.monthlyFee.goe(90000));
                     break;
             }
@@ -105,6 +105,8 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
     }
 
     public Predicate dataOptionFilter(PlanFilterRequestDto filterRequest) {
+        // If "Any Data" is selected, or no specific data options are provided,
+        // no filtering is needed for data, so return null.
         if (filterRequest.isAnyDataSelected() ||
                 filterRequest.getDataOptions() == null ||
                 filterRequest.getDataOptions().isEmpty()) {
@@ -113,48 +115,78 @@ public class PlanRepositoryCustomImpl implements PlanRepositoryCustom {
 
         BooleanBuilder dataBuilder = new BooleanBuilder();
 
+        // Iterate through each data option selected by the user
         for (String option : filterRequest.getDataOptions()) {
             switch (option) {
-                case "소용량":
+                case "small":
                     dataBuilder.or(
+                            // Case 1: Data allowance is null or zero (considered small/no data)
                             plan.dataAllowances.isNull()
-                                    .or(plan.dataAllowances.dataAmount.eq(0)
-                                            .or(plan.dataAllowances.dataUnit.eq("MB")
-                                                    .and(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
-                                                            .and(plan.dataAllowances.dataAmount.loe(LARGE_DATA_THRESHOLD_MB)))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                            .and(plan.dataAllowances.dataAmount.multiply(30).loe(LARGE_DATA_THRESHOLD_MB))))
-                                            .or(plan.dataAllowances.dataUnit.eq("GB")
-                                                    .and(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
-                                                            .and(plan.dataAllowances.dataAmount.loe(SMALL_DATA_THRESHOLD_GB)))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                            .and(plan.dataAllowances.dataAmount.multiply(30).loe(SMALL_DATA_THRESHOLD_GB))))
+                                    .or(plan.dataAllowances.dataAmount.eq(0))
+                                    .or(
+                                            // Case 2: Monthly MB data (e.g., 2GB or less)
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                    .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                    .and(plan.dataAllowances.dataAmount.loe(LARGE_DATA_THRESHOLD_MB))
+                                    )
+                                    .or(
+                                            // Case 3: Daily MB data, when converted to monthly, is small
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                    .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                    .and(plan.dataAllowances.dataAmount.multiply(30).loe(LARGE_DATA_THRESHOLD_MB))
+                                    )
+                                    .or(
+                                            // Case 4: Monthly GB data (e.g., 10GB or less)
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                    .and(plan.dataAllowances.dataUnit.eq("GB"))
+                                                    .and(plan.dataAllowances.dataAmount.loe(SMALL_DATA_THRESHOLD_GB))
+                                    )
+                                    .or(
+                                            // Case 5: Daily GB data, when converted to monthly, is small,
+                                            // AND it's NOT 5GB daily (which would be large)
+                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                    .and(plan.dataAllowances.dataUnit.eq("GB"))
+                                                    .and(plan.dataAllowances.dataAmount.multiply(30).loe(SMALL_DATA_THRESHOLD_GB))
+                                                    .and(plan.dataAllowances.dataAmount.lt(5)) // Exclude 5GB daily plans from 'small'
                                     )
                     );
                     break;
 
-                case "대용량":
+                case "large":
                     dataBuilder.or(
+                            // Ensure it's not an unlimited plan and data allowance is not null
                             plan.dataAllowances.dataAmount.ne(UNLIMITED_DATA_AMOUNT)
                                     .and(plan.dataAllowances.isNotNull())
                                     .and(
+                                            // Case 1: Monthly GB data is large (e.g., more than 10GB)
                                             plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
                                                     .and(plan.dataAllowances.dataUnit.eq("GB"))
                                                     .and(plan.dataAllowances.dataAmount.gt(SMALL_DATA_THRESHOLD_GB))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                            .and(plan.dataAllowances.dataUnit.eq("GB"))
-                                                            .and(plan.dataAllowances.dataAmount.multiply(30).gt(SMALL_DATA_THRESHOLD_GB)))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
-                                                            .and(plan.dataAllowances.dataUnit.eq("MB"))
-                                                            .and(plan.dataAllowances.dataAmount.gt(LARGE_DATA_THRESHOLD_MB)))
-                                                    .or(plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
-                                                            .and(plan.dataAllowances.dataUnit.eq("MB"))
-                                                            .and(plan.dataAllowances.dataAmount.multiply(30).gt(LARGE_DATA_THRESHOLD_MB)))
+                                                    .or(
+                                                            // Case 2: Daily GB data, when converted to monthly, is large
+                                                            // This now correctly includes 5GB daily (5 * 30 = 150GB, which is > 10GB)
+                                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                                    .and(plan.dataAllowances.dataUnit.eq("GB"))
+                                                                    .and(plan.dataAllowances.dataAmount.multiply(30).gt(SMALL_DATA_THRESHOLD_GB))
+                                                    )
+                                                    .or(
+                                                            // Case 3: Monthly MB data is large (e.g., more than 2GB)
+                                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.MONTH)
+                                                                    .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                                    .and(plan.dataAllowances.dataAmount.gt(LARGE_DATA_THRESHOLD_MB))
+                                                    )
+                                                    .or(
+                                                            // Case 4: Daily MB data, when converted to monthly, is large
+                                                            plan.dataAllowances.dataPeriod.eq(DataPeriod.DAY)
+                                                                    .and(plan.dataAllowances.dataUnit.eq("MB"))
+                                                                    .and(plan.dataAllowances.dataAmount.multiply(30).gt(LARGE_DATA_THRESHOLD_MB))
+                                                    )
                                     )
                     );
                     break;
 
                 case "unlimited":
+                    // Case: Data amount is explicitly set to the unlimited constant
                     dataBuilder.or(plan.dataAllowances.dataAmount.eq(UNLIMITED_DATA_AMOUNT));
                     break;
             }
