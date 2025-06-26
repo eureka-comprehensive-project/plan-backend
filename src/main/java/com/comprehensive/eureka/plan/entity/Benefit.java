@@ -28,5 +28,6 @@ public class Benefit {
     private BenefitType benefitType;
 
     @OneToMany(mappedBy = "benefit")
+    @Builder.Default
     private List<BenefitGroupBenefit> benefitGroupBenefits = new ArrayList<>();
 }

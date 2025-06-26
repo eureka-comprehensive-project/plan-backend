@@ -45,6 +45,7 @@ public class Plan {
     private PlanCategory planCategory;
 
     @OneToMany(mappedBy = "plan")
+    @Builder.Default
     private Set<PlanBenefitGroup> planBenefitGroups = new HashSet<>();
 
 }

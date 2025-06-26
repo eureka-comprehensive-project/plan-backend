@@ -27,8 +27,10 @@ public class BenefitGroup {
     private String description;
 
     @OneToMany(mappedBy = "benefitGroup")
+    @Builder.Default
     private List<PlanBenefitGroup> planBenefitGroups = new ArrayList<>();
 
     @OneToMany(mappedBy = "benefitGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<BenefitGroupBenefit> benefitGroupBenefits = new HashSet<>();
 }
