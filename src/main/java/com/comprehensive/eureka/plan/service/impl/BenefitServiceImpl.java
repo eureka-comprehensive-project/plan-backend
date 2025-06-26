@@ -4,6 +4,7 @@ import com.comprehensive.eureka.plan.dto.BenefitDto;
 import com.comprehensive.eureka.plan.dto.request.BenefitRequestDto;
 import com.comprehensive.eureka.plan.entity.Benefit;
 import com.comprehensive.eureka.plan.entity.BenefitGroup;
+import com.comprehensive.eureka.plan.entity.BenefitGroupBenefit;
 import com.comprehensive.eureka.plan.entity.PlanBenefitGroup;
 import com.comprehensive.eureka.plan.entity.enums.BenefitType;
 import com.comprehensive.eureka.plan.exception.ErrorCode;
@@ -115,7 +116,19 @@ public class BenefitServiceImpl implements BenefitService {
                     return new IllegalArgumentException(errorMessage);
                 });
 
-        Set<BenefitDto> benefits = planBenefitGroup.getBenefitGroup().getBenefitGroupBenefits().stream()
+        BenefitGroup benefitGroup = planBenefitGroup.getBenefitGroup();
+        if (benefitGroup == null) {
+            log.warn("요금제_혜택모음ID [{}]에 해당하는 혜택 그룹이 null입니다. 빈 혜택 목록을 반환합니다.", planBenefitGroupId);
+            return Collections.emptySet(); // 빈 Set 반환
+        }
+
+        Set<BenefitGroupBenefit> benefitGroupBenefits = benefitGroup.getBenefitGroupBenefits();
+        if (benefitGroupBenefits == null || benefitGroupBenefits.isEmpty()) {
+            log.warn("요금제_혜택모음ID [{}]에 해당하는 혜택 그룹에 연결된 혜택이 없거나 컬렉션이 null입니다. 빈 혜택 목록을 반환합니다.", planBenefitGroupId);
+            return Collections.emptySet(); // 빈 Set 반환
+        }
+
+        Set<BenefitDto> benefits = benefitGroupBenefits.stream()
                 .map(benefitGroupBenefit -> {
                     Benefit benefit = benefitGroupBenefit.getBenefit();
                     log.debug("혜택 변환 중: ID={}, 이름={}, 타입={}", benefit.getBenefitId(), benefit.getBenefitName(), benefit.getBenefitType());
