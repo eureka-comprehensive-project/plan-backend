@@ -1,22 +1,17 @@
 package com.comprehensive.eureka.plan.dto.response;
 
 import com.comprehensive.eureka.plan.entity.Plan;
-import com.comprehensive.eureka.plan.entity.PlanBenefitGroup;
-import com.comprehensive.eureka.plan.entity.BenefitGroupBenefit;
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.ArrayList; // ArrayList를 import 합니다.
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class FilterListResponseDto {
 
     private Integer planId;
