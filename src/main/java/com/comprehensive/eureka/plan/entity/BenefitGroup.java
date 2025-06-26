@@ -3,10 +3,8 @@ package com.comprehensive.eureka.plan.entity;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +14,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@EqualsAndHashCode(of = "benefitGroupId")
 @Table(name = "benefit_group")
 public class BenefitGroup {
 
