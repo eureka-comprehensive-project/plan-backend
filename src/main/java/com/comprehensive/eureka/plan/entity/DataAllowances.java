@@ -2,10 +2,7 @@ package com.comprehensive.eureka.plan.entity;
 
 import com.comprehensive.eureka.plan.entity.enums.DataPeriod;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +12,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@EqualsAndHashCode(of = "dataAllowanceId")
 @Table(name = "data_allowances")
 public class DataAllowances {
 

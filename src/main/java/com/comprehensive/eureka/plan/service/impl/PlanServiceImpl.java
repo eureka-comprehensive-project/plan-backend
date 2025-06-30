@@ -159,6 +159,8 @@ public class PlanServiceImpl implements PlanService {
 
             updatePlanBenefits(planToUpdate, planDto.getBenefitIdList());
 
+            Plan savedPlan = planRepository.save(planToUpdate);
+
             log.info("요금제 수정 성공: {}", planToUpdate.getPlanName());
             return convertToDto(planToUpdate, planDto.getBenefitIdList());
 
